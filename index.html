@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PedeAÍ · monte, toque e peça</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='10' fill='%236A2CD8'/><path d='M16 6c-4.4 0-8 3.4-8 7.6 0 5 8 12.4 8 12.4s8-7.4 8-12.4C24 9.4 20.4 6 16 6z' fill='%23C8F04A'/><circle cx='16' cy='13.6' r='3' fill='%236A2CD8'/></svg>">
+  <meta name="description"
+    content="PedeAÍ: o app de pedidos da sua pizzaria e hamburgueria. Monte a pizza, empilhe o lanche, peça.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Geist:wght@400;500;600&family=Geist+Mono&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <nav class="nav">
+    <a class="marca" href="#">
+      <svg class="marca__icone" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="10" class="fundo" />
+        <path d="M16 6c-4.4 0-8 3.4-8 7.6 0 5 8 12.4 8 12.4s8-7.400 8-12.400C24 9.400 20.400 6 16 6z" class="pino" />
+        <circle cx="16" cy="13.600" r="3" class="furo" />
+      </svg>
+      Pede<span class="ai">AÍ</span>
+    </a>
+    <a class="botao botao--pequeno" href="#demos">Testar agora</a>
+  </nav>
+
+  <section class="hero">
+    <h1 class="hero__titulo">Seu cliente monta o prato <span class="destaque">e o pedido chega pronto.</span></h1>
+    <p class="hero__sub">Pizza que se monta com o dedo, lanche que empilha camada por camada. O preço sobe contando, a
+      comanda cai na cozinha.</p>
+
+    <!-- Navegação do carrossel -->
+    <div class="carrossel-nav" id="carrosselNav" role="tablist" aria-label="Escolha o pedido">
+      <button class="carrossel-tab carrossel-tab--active" data-alvo="slidePizza" role="tab" aria-selected="true" aria-controls="slidePizza">
+        <span class="carrossel-tab__icone">🍕</span>
+        <span>Pizza</span>
+      </button>
+      <button class="carrossel-tab" data-alvo="slideMassa" role="tab" aria-selected="false" aria-controls="slideMassa">
+        <span class="carrossel-tab__icone">🍝</span>
+        <span>Massas</span>
+      </button>
+      <button class="carrossel-tab" data-alvo="slideLanche" role="tab" aria-selected="false" aria-controls="slideLanche">
+        <span class="carrossel-tab__icone">🍔</span>
+        <span>Hamburger</span>
+      </button>
+    </div>
+
+    <div class="demos demos--carrossel" id="demos">
+      <!-- PIZZA -->
+      <div class="palco" id="slidePizza">
+        <div class="palco__cab"><span class="palco__tipo">Pizza</span><span class="palco__dica">toque para jogar, segure
+            para tirar</span></div>
+        <div class="app" id="appPizza">
+          <div class="app__topo">
+            <div>
+              <div class="app__casa">Pizzaria Demo</div>
+              <div class="app__mesa">Mesa 7</div>
+            </div>
+          </div>
+          <div class="vista">
+            <div class="app__cab">
+              <h2 class="app__titulo">Monte sua pizza</h2>
+              <div class="tamanhos" role="radiogroup" aria-label="Tamanho">
+                <button role="radio" data-tam="P" aria-checked="false">P</button><button role="radio" data-tam="M"
+                  aria-checked="false">M</button><button role="radio" data-tam="G" aria-checked="true">G</button>
+              </div>
+            </div>
+            <div class="pizza" id="pizza">
+              <div class="assador" id="forno">
+                <video class="forno__boca" id="fornoVid" src="imagens/pizza/forno.mp4" muted loop playsinline></video>
+                <video class="forno__fogo" id="fogoVid" src="imagens/pizza/fogo.mp4" muted loop playsinline></video>
+                <div class="forno__brilho" id="brilho"></div>
+              </div>
+              <div class="pizza__anel" id="anel"></div>
+              <div class="pizza__giro" id="pizzaGiro" style="transform:scale(1)">
+                <img class="pizza__base" src="imagens/pizza/pizza-crua.webp" alt="">
+                <img class="pizza__assada" id="assada" src="imagens/pizza/pizza-molho.webp" alt="">
+                <canvas class="pizza__queijo" id="queijoA"></canvas><canvas
+                  class="pizza__queijo pizza__queijo--derretido" id="queijoAd"></canvas>
+                <canvas class="pizza__queijo" id="queijoB"></canvas><canvas
+                  class="pizza__queijo pizza__queijo--derretido" id="queijoBd"></canvas>
+                <div class="pizza__cobertura" id="cobertura">
+                  <canvas class="pizza__molho" id="molho-catupiry"></canvas><canvas class="pizza__molho"
+                    id="molho-cheddar"></canvas>
+                </div>
+              </div>
+            </div>
+            <p class="app__dica" id="dica-pizza" aria-live="polite">Toque num ingrediente para adicionar</p>
+            <div class="ingredientes" id="ingPizza"></div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir" id="pedir-pizza" type="button"><span class="pedir__barra"
+                id="barra-pizza"></span><span id="pedirTexto-pizza">Adicionar ao pedido</span><span class="pedir__preco"
+                id="preco-pizza">R$ 0,00</span></button>
+          </div>
+          <aside class="comanda" id="comanda-pizza" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-pizza"></div>
+            <div class="comanda__itens" id="comandaItens-pizza"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- MASSAS -->
+      <div class="palco palco--massas" id="slideMassa">
+        <div class="palco__cab"><span class="palco__tipo">Massas</span><span class="palco__dica">escolha o molho e os ingredientes</span></div>
+        <div class="app app--massa" id="appMassa">
+          <div class="app__topo app__topo--massa">
+            <div>
+              <div class="app__casa">Cantina da Nonna</div>
+              <div class="app__mesa">Retirada · demonstração</div>
+            </div>
+          </div>
+          <!-- ETAPA RECHEIO -->
+          <div class="vista vista--massa" id="vistaRecheio">
+            <div class="massa__stepper" role="tablist" aria-label="Etapas" id="massaStepper">
+              <div class="massa__step massa__step--active" data-etapa="1"><span class="massa__step-num">1</span><span>Recheio</span></div>
+              <div class="massa__step" data-etapa="2"><span class="massa__step-num">2</span><span>Molho</span></div>
+              <div class="massa__step" data-etapa="3"><span class="massa__step-num">3</span><span>Massa</span></div>
+              <div class="massa__step" data-etapa="4"><span class="massa__step-num">4</span><span>Finalizar</span></div>
+            </div>
+            <div class="massa__cab" id="massaCab">
+              <h2 class="massa__titulo" id="massaTitulo">Escolha o recheio</h2>
+              <p class="massa__sub" id="massaSub">Coloque quantos quiser · 2 toques é dupla</p>
+            </div>
+            <div class="massa__prato-box" id="massaPratoBox">
+              <div class="massa" id="massa">
+                <img class="massa__panela" id="massaPanela" src="imagens/massas/frigideira.webp" alt="Frigideira">
+                <div class="massa__conteudo" id="massaConteudo"></div>
+                <!-- camadas que aparecem nas etapas seguintes -->
+                <img class="massa__camada-molho" id="massaMolhoImg" src="" alt="" hidden>
+                <img class="massa__camada-tipo" id="massaTipoImg" src="" alt="" hidden>
+              </div>
+            </div>
+            <p class="massa__legenda" id="massaLegenda">Seu prato aparece aqui</p>
+            <p class="massa__instrucao" id="dica-massa">Toque nas cubas para jogar na frigideira</p>
+            <!-- Etapa 1: grid de ingredientes -->
+            <div id="massaEtapa1">
+              <div class="massa__tabs" id="massaTabs" role="tablist" aria-label="Categorias">
+                <button type="button" class="massa__tab massa__tab--active" data-cat="carnes">Carnes</button>
+                <button type="button" class="massa__tab" data-cat="legumes">Legumes</button>
+                <button type="button" class="massa__tab" data-cat="queijos">Queijos</button>
+                <button type="button" class="massa__tab" data-cat="temperos">Temperos</button>
+              </div>
+              <div class="massa__cubas" id="ingMassa"></div>
+            </div>
+            <!-- Etapa 2: seleção de molho -->
+            <div id="massaEtapa2" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque no molho para adicionar</p>
+              <div class="massa__cubas massa__cubas--molho" id="ingMolho"></div>
+            </div>
+            <!-- Etapa 3: tipo de massa -->
+            <div id="massaEtapa3" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque no tipo de massa</p>
+              <div class="massa__cubas massa__cubas--tipo" id="ingTipoMassa"></div>
+            </div>
+            <!-- Etapa 4: finalizações -->
+            <div id="massaEtapa4" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque para finalizar o prato</p>
+              <div class="massa__cubas massa__cubas--final" id="ingFinal"></div>
+              <!-- prato pronto aparece aqui -->
+              <div class="massa__prato-pronto" id="massaPratoFinal" hidden>
+                <img id="massaPratoFinalImg" src="" alt="Prato pronto" class="massa__prato-pronto-img">
+              </div>
+            </div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir pedir--massa" id="pedir-massa" type="button">
+              <span class="pedir__barra" id="barra-massa"></span>
+              <span id="pedirTexto-massa">Próximo: molho →</span>
+              <span class="pedir__preco" id="preco-massa">R$ 29,00</span>
+            </button>
+          </div>
+          <aside class="comanda" id="comanda-massa" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-massa"></div>
+            <div class="comanda__itens" id="comandaItens-massa"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- LANCHE -->
+      <div class="palco palco--lanche" id="slideLanche">
+        <div class="palco__cab"><span class="palco__tipo">Hamburger</span><span class="palco__dica">cada toque empilha
+            uma camada</span></div>
+        <div class="app" id="appLanche">
+          <div class="app__topo">
+            <div>
+              <div class="app__casa">Hamburgueria Demo</div>
+              <div class="app__mesa">Mesa 7</div>
+            </div>
+          </div>
+          <div class="vista">
+            <div class="app__cab">
+              <h2 class="app__titulo">Monte seu hamburger</h2>
+            </div>
+            <div class="lanche" id="lanche">
+              <div class="lanche__pilha" id="pilha"></div>
+              <div class="lanche__chapa" id="chapa"></div>
+              <div class="palito" id="palito" hidden><span class="palito__vara"></span><svg class="palito__bandeira"
+                  viewBox="0 0 40 27">
+                  <path class="pano" d="M0 0h40l-8 13.500L40 27H0z" /><text x="5" y="18" font-size="11"
+                    font-weight="800" class="txt">AÍ</text>
+                </svg></div>
+            </div>
+            <p class="app__dica" id="dica-lanche" aria-live="polite"></p>
+            <div class="paes" id="paes" role="radiogroup" aria-label="Pão"></div>
+            <div class="ingredientes" id="ingLanche" style="margin-top:10px"></div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir" id="pedir-lanche" type="button"><span class="pedir__barra"
+                id="barra-lanche"></span><span id="pedirTexto-lanche">Adicionar ao pedido</span><span
+                class="pedir__preco" id="preco-lanche">R$ 0,00</span></button>
+          </div>
+          <aside class="comanda" id="comanda-lanche" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-lanche"></div>
+            <div class="comanda__itens" id="comandaItens-lanche"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+    <!-- Pontinhos indicadores do carrossel -->
+    <div class="carrossel-dots" id="carrosselDots" aria-hidden="true">
+      <span class="carrossel-dot carrossel-dot--active"></span>
+      <span class="carrossel-dot"></span>
+      <span class="carrossel-dot"></span>
+    </div>
+  </section>
+
+  <div class="calor" id="calor"></div>
+  <footer class="rodape"><span>© 2026 PedeAÍ</span><span>Feito para quem vende no balcão e no zap.</span></footer>
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,2168 @@
+/* PedeAÍ · paleta: uva (primária) + lima (acento) + noite */
+:root {
+  --paper: #F6F2FC;
+  --paper-2: #ECE5F8;
+  --paper-3: #DCD0F0;
+  --card: #fff;
+  --ink: #1D1233;
+  --ink-2: #4A3D66;
+  --ink-3: #7B6F96;
+  --line: #E2D9F2;
+  --line-2: #CBBEE6;
+  --uva: #6A2CD8;
+  --uva-press: #5219B3;
+  --uva-soft: #EADFFC;
+  --on-uva: #fff;
+  --lima: #C8F04A;
+  --lima-soft: #F1FBC9;
+  --verde: #1F9D6B;
+  --noite: #170D2B;
+  --noite-2: #231640;
+  --noite-3: #33235A;
+  --on-noite: #F3EEFC;
+  --on-noite-2: #B7ABD1;
+  --fogo-1: #FF8A3D;
+  --fogo-2: rgba(255, 90, 40, .45);
+  --faisca-1: #fff;
+  --faisca-2: #FFE08A;
+  --faisca-3: #FF9A3C;
+  --calor-1: rgba(255, 120, 40, .35);
+  --calor-2: rgba(180, 50, 20, .6);
+  --sombra-1: rgba(30, 15, 50, .5);
+  --sombra-2: rgba(30, 15, 50, .25);
+  --shadow: rgba(29, 18, 51, .18);
+  --shadow-strong: rgba(29, 18, 51, .45);
+  --focus: #6A2CD8;
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --r-pill: 999px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1rem/1.55 var(--font-body);
+  -webkit-font-smoothing: antialiased
+}
+
+img {
+  display: block;
+  max-width: 100%
+}
+
+h1,
+h2,
+p {
+  margin: 0
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer
+}
+
+[hidden] {
+  display: none !important
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 6px
+}
+
+.nav {
+  position: sticky;
+  top: 12px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1120px, calc(100% - 24px));
+  margin: 12px auto 0;
+  padding: 7px 7px 7px 16px;
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill)
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font: 800 1.32rem var(--font-display);
+  letter-spacing: -.03em;
+  color: var(--ink)
+}
+
+.marca__icone {
+  width: 30px;
+  height: 30px
+}
+
+.marca__icone .fundo {
+  fill: var(--uva)
+}
+
+.marca__icone .pino {
+  fill: var(--lima)
+}
+
+.marca__icone .furo {
+  fill: var(--uva)
+}
+
+.marca .ai {
+  color: var(--uva)
+}
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
+  background: var(--uva);
+  color: var(--on-uva);
+  font-weight: 600;
+  font-size: .9rem;
+  text-decoration: none;
+  transition: background .15s
+}
+
+.botao:hover {
+  background: var(--uva-press)
+}
+
+.hero {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 72px 0
+}
+
+.hero__titulo {
+  font: 800 clamp(2.4rem, 5vw + .6rem, 5rem)/1 var(--font-display);
+  letter-spacing: -.037em;
+  max-width: 18ch;
+  text-wrap: balance
+}
+
+.destaque {
+  color: var(--uva)
+}
+
+.hero__sub {
+  margin-top: 24px;
+  max-width: 58ch;
+  font-size: 1.15rem;
+  color: var(--ink-2)
+}
+
+/* ================================================================
+   CARROSSEL — um card por vez
+   ================================================================ */
+
+/* Cada slide ocupa 100% da largura do container */
+.demos--carrossel>.palco {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  border-radius: var(--r-xl);
+  min-height: calc(100vh - 220px);
+  /* permite scroll vertical dentro do slide sem conflito com swipe horizontal */
+  touch-action: pan-y;
+  overflow-y: auto;
+}
+
+/* Navbar de abas do carrossel */
+.carrossel-nav {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 6px;
+  background: var(--noite);
+  border-radius: var(--r-pill);
+}
+
+.carrossel-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 8px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--on-noite-2);
+  font-size: .75rem;
+  font-weight: 600;
+  transition: background .2s, color .2s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.carrossel-tab__icone {
+  font-size: 1.4rem;
+  line-height: 1;
+  pointer-events: none
+}
+
+.carrossel-tab--active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+}
+
+.carrossel-tab:not(.carrossel-tab--active):hover {
+  background: var(--noite-3);
+  color: var(--on-noite);
+}
+
+/* Pontinhos indicadores abaixo do carrossel */
+.carrossel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.carrossel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--noite-3);
+  transition: background .2s, transform .2s;
+}
+
+.carrossel-dot--active {
+  background: var(--uva);
+  transform: scale(1.4);
+}
+
+.demos {
+  display: grid;
+  gap: 24px;
+  margin-top: 48px
+}
+
+@media(min-width:900px) {
+  .demos {
+    grid-template-columns: 1fr 1fr
+  }
+}
+
+@media(min-width:1300px) {
+  .demos {
+    grid-template-columns: repeat(3, 1fr)
+  }
+}
+
+/* Carrossel: anula grid em qualquer tamanho de tela */
+.demos--carrossel {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  grid-template-columns: unset !important;
+  gap: 0 !important;
+  margin-top: 16px !important;
+  overflow-x: scroll !important;
+  scroll-snap-type: x mandatory !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important
+}
+
+.demos--carrossel::-webkit-scrollbar {
+  display: none !important
+}
+
+@media(min-width:900px) {
+  .demos--carrossel {
+    display: flex !important;
+    grid-template-columns: unset !important
+  }
+}
+
+@media(min-width:1300px) {
+  .demos--carrossel {
+    display: flex !important;
+    grid-template-columns: unset !important
+  }
+}
+
+.palco {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 20px;
+  padding: 24px 16px 32px;
+  border-radius: var(--r-xl);
+  background: var(--uva) radial-gradient(circle at 1px 1px, rgba(255, 255, 255, .16) 1px, transparent 0) 0 0/22px 22px
+}
+
+.palco--lanche {
+  background-color: var(--noite)
+}
+
+.palco--massas {
+  background-color: var(--noite-2)
+}
+
+.palco__cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+  color: #fff
+}
+
+.palco__tipo {
+  font: 800 1.6rem var(--font-display);
+  letter-spacing: -.035em
+}
+
+.palco__dica {
+  font-size: .85rem;
+  opacity: .8
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--card);
+  border-radius: var(--r-xl);
+  box-shadow: 0 30px 60px -24px var(--shadow-strong);
+  overflow: hidden
+}
+
+.app__topo {
+  padding: 16px 16px 4px
+}
+
+.app__casa {
+  font: 700 1.05rem var(--font-display)
+}
+
+.app__mesa {
+  font-size: .75rem;
+  color: var(--ink-3)
+}
+
+.vista {
+  padding: 0 16px
+}
+
+.app__cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px
+}
+
+.app__titulo {
+  font: 800 1.5rem var(--font-display);
+  letter-spacing: -.035em
+}
+
+.tamanhos {
+  display: inline-flex;
+  gap: 4px
+}
+
+.tamanhos button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  background: transparent;
+  font-weight: 600;
+  transition: all .15s
+}
+
+.tamanhos button[aria-checked=true] {
+  border-color: var(--uva);
+  background: var(--uva);
+  color: #fff
+}
+
+.app__dica {
+  margin-top: 6px;
+  min-height: 1.4em;
+  text-align: center;
+  font-size: .78rem;
+  color: var(--ink-3);
+  transition: opacity .25s
+}
+
+.app__dica.troca-txt {
+  opacity: 0
+}
+
+.dica-acao {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--uva-press);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px
+}
+
+.app__rodape {
+  padding: 0 16px 16px
+}
+
+.pizza {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 1;
+  margin: 8px auto 0;
+  width: 100%;
+  max-width: 300px
+}
+
+.pizza__giro {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transition: transform .5s var(--ease-out)
+}
+
+.pizza__base,
+.pizza__assada,
+.pizza__queijo,
+.pizza__molho,
+.pizza__cobertura {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%
+}
+
+.pizza__base,
+.pizza__assada {
+  filter: drop-shadow(0 14px 18px rgba(40, 20, 60, .25))
+}
+
+.pizza__assada,
+.pizza__queijo--derretido {
+  opacity: 0
+}
+
+.pizza__queijo,
+.pizza__molho {
+  pointer-events: none
+}
+
+.pc {
+  position: absolute;
+  aspect-ratio: 1
+}
+
+.pc-sh {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, var(--sombra-1), var(--sombra-2) 50%, transparent 72%)
+}
+
+.pc-art {
+  position: absolute;
+  inset: 0
+}
+
+.pc-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px var(--shadow))
+}
+
+.pc-art img.ck {
+  opacity: 0;
+  filter: brightness(.86) saturate(1.25) sepia(.18) contrast(1.06)
+}
+
+.pc-art img.ck-folha {
+  filter: brightness(.62) saturate(.9) sepia(.25)
+}
+
+.pc-art img.ck-creme {
+  filter: brightness(.95) saturate(1.1) sepia(.35)
+}
+
+.farelo {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  object-fit: contain;
+  pointer-events: none
+}
+
+.bisnaga {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 14px 16px var(--shadow-strong))
+}
+
+.ferr {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 14px var(--shadow-strong))
+}
+
+.ferramenta {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 60;
+  will-change: transform;
+  filter: drop-shadow(0 10px 14px var(--shadow-strong))
+}
+
+.carregado {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 59;
+  object-fit: contain;
+  will-change: transform
+}
+
+.voo {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 58;
+  object-fit: contain;
+  will-change: transform
+}
+
+.assador {
+  position: absolute;
+  z-index: 0;
+  inset: -9% -17%;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--noite)
+}
+
+.forno__boca {
+  position: absolute;
+  left: 50%;
+  top: -6%;
+  width: 125%;
+  transform: translateX(-50%);
+  object-fit: cover
+}
+
+.forno__fogo {
+  position: absolute;
+  left: 50%;
+  bottom: -14%;
+  width: 150%;
+  transform: translateX(-50%);
+  mix-blend-mode: screen;
+  opacity: 0
+}
+
+.forno__brilho {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 140%;
+  height: 92%;
+  transform: translateX(-50%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(ellipse 50% 50% at 50% 60%, var(--fogo-1), var(--fogo-2) 42%, transparent 70%)
+}
+
+.pizza__anel {
+  position: absolute;
+  inset: 1%;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px var(--fogo-1), 0 0 70px 10px var(--fogo-2)
+}
+
+.faisca {
+  position: absolute;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--faisca-1), var(--faisca-2) 28%, var(--faisca-3) 50%, transparent 72%)
+}
+
+.calor {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 45%, var(--calor-1) 78%, var(--calor-2))
+}
+
+.ingredientes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0 2px;
+  margin: 8px 0 12px
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 0 4px;
+  border: 0;
+  background: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent
+}
+
+.chip:focus-visible {
+  outline: none
+}
+
+.chip:focus-visible .well {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px
+}
+
+.well {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: transform .2s cubic-bezier(.3, 1.6, .5, 1), box-shadow .25s, background .25s
+}
+
+.chip.apertado .well {
+  transform: scale(.9)
+}
+
+.chip.on .well {
+  background: var(--uva-soft);
+  box-shadow: inset 0 0 0 1.5px var(--uva)
+}
+
+.chip-art {
+  position: relative;
+  width: 48px;
+  height: 40px;
+  pointer-events: none;
+  transform: scale(.9)
+}
+
+.ca {
+  position: absolute;
+  width: 62%;
+  aspect-ratio: 1
+}
+
+.ca img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 3px var(--shadow))
+}
+
+.ca0 {
+  left: 19%;
+  top: 4%;
+  z-index: 3
+}
+
+.ca1 {
+  left: -3%;
+  top: 22%;
+  z-index: 1;
+  transform: rotate(-26deg) scale(.82)
+}
+
+.ca2 {
+  right: -3%;
+  top: 20%;
+  z-index: 2;
+  transform: rotate(32deg) scale(.86)
+}
+
+.ca-unica {
+  left: -2%;
+  top: 0;
+  width: 104%;
+  height: 100%
+}
+
+.chip-nome {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  pointer-events: none
+}
+
+.chip.on .chip-nome {
+  color: var(--ink)
+}
+
+.chip-preco {
+  margin-top: -3px;
+  font-size: .62rem;
+  white-space: nowrap;
+  color: var(--ink-3);
+  pointer-events: none
+}
+
+.chip.on .chip-preco {
+  color: var(--uva-press)
+}
+
+.badge,
+.menos {
+  position: absolute;
+  top: 3px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  box-shadow: 0 0 0 2.5px var(--card);
+  transform: scale(0);
+  transition: transform .3s cubic-bezier(.3, 1.8, .5, 1);
+  pointer-events: none
+}
+
+.badge {
+  left: calc(50% + 12px);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--uva);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600
+}
+
+.menos {
+  right: calc(50% + 12px);
+  width: 22px;
+  height: 22px;
+  background: var(--ink);
+  color: #fff
+}
+
+.menos svg {
+  width: 12px;
+  height: 12px
+}
+
+.menos::after {
+  content: "";
+  position: absolute;
+  inset: -11px
+}
+
+.chip.on .badge,
+.chip.on .menos {
+  transform: scale(1)
+}
+
+.chip.on .menos {
+  pointer-events: auto
+}
+
+.chip.convite .well {
+  animation: convite 1.8s var(--ease-out) infinite
+}
+
+@keyframes convite {
+  0% {
+    box-shadow: inset 0 0 0 1px var(--line), 0 0 0 0 rgba(106, 44, 216, .45)
+  }
+
+  70%,
+  100% {
+    box-shadow: inset 0 0 0 1px var(--line), 0 0 0 10px rgba(106, 44, 216, 0)
+  }
+}
+
+.app.assando .chip,
+.app.assada .chip,
+.app.chapando .chip,
+.app.pronto .chip {
+  opacity: .4;
+  transition: opacity .4s
+}
+
+.app.assando .ingredientes,
+.app.assada .ingredientes,
+.app.assando .tamanhos,
+.app.assada .tamanhos,
+.app.chapando .ingredientes,
+.app.pronto .ingredientes {
+  pointer-events: none
+}
+
+.pedir {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 14px 0 22px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  transition: background .15s, transform .15s
+}
+
+.pedir:hover {
+  background: #2D1F4D
+}
+
+.pedir:active {
+  transform: translateY(1px)
+}
+
+.pedir.ok {
+  background: var(--verde)
+}
+
+.pedir__preco {
+  display: inline-block;
+  font: .85rem var(--font-mono);
+  padding: 6px 10px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .14);
+  font-variant-numeric: tabular-nums
+}
+
+.pedir>span:not(.pedir__barra) {
+  position: relative;
+  white-space: nowrap
+}
+
+.pedir__barra {
+  position: absolute !important;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, var(--fogo-1));
+  pointer-events: none
+}
+
+.delta {
+  position: absolute;
+  top: 50%;
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--lima);
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none
+}
+
+.comanda {
+  position: absolute;
+  z-index: 5;
+  right: 10px;
+  top: 150px;
+  width: 230px;
+  padding: 12px 16px;
+  background: var(--lima-soft);
+  border-radius: var(--r-md);
+  box-shadow: 0 18px 36px -14px var(--shadow-strong);
+  font-size: .85rem
+}
+
+.comanda:not([hidden]) {
+  animation: comanda .52s var(--ease-out)
+}
+
+@keyframes comanda {
+  from {
+    opacity: 0;
+    transform: translate(40px, 16px) scale(.85) rotate(4deg)
+  }
+}
+
+.comanda__cab {
+  display: flex;
+  justify-content: space-between;
+  font: .7rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-3)
+}
+
+.comanda__num {
+  margin-top: 4px;
+  font: 800 1.1rem var(--font-display)
+}
+
+.comanda__itens {
+  margin-top: 2px;
+  color: var(--ink-2);
+  line-height: 1.35
+}
+
+.comanda__pago {
+  margin-top: 8px;
+  font-weight: 600;
+  color: var(--verde);
+  font-size: .75rem
+}
+
+.massa {
+  position: relative;
+  height: 180px;
+  margin: 8px auto 0;
+  max-width: 290px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px
+}
+
+.massa__recipiente,
+.massa__molho {
+  max-height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(30, 15, 50, .2))
+}
+
+.lanche {
+  position: relative;
+  height: 300px;
+  margin: 8px auto 0;
+  max-width: 290px
+}
+
+.lanche__pilha {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%
+}
+
+.camada {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 4px 4px rgba(30, 15, 50, .2))
+}
+
+.lanche__chapa {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: -4px;
+  height: 16px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(var(--noite-3), var(--noite));
+  box-shadow: 0 -10px 30px 4px var(--fogo-1)
+}
+
+.vapor {
+  position: absolute;
+  z-index: 60;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(7px);
+  background: radial-gradient(circle, rgba(255, 255, 255, .9), rgba(255, 255, 255, .4) 45%, transparent 70%)
+}
+
+.migalha {
+  position: absolute;
+  z-index: 60;
+  width: 5px;
+  height: 5px;
+  border-radius: 40%;
+  pointer-events: none;
+  background: var(--faisca-3)
+}
+
+.lanche .faisca {
+  z-index: 60
+}
+
+.palito {
+  position: absolute;
+  z-index: 70;
+  width: 46px;
+  height: 92px;
+  pointer-events: none;
+  transform: rotate(4deg);
+  transform-origin: 6px 100%
+}
+
+.palito__vara {
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  width: 3px;
+  height: 86px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #E8D6A8, #C9A96A)
+}
+
+.palito__bandeira {
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  width: 40px;
+  height: 27px;
+  filter: drop-shadow(0 2px 3px var(--shadow))
+}
+
+.palito .pano {
+  fill: var(--uva)
+}
+
+.palito .txt {
+  fill: var(--lima)
+}
+
+.paes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px
+}
+
+.paes button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 4px 5px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  transition: border-color .15s, background .15s
+}
+
+.paes button img {
+  width: 40px;
+  height: 20px;
+  object-fit: contain
+}
+
+.paes button[aria-checked=true] {
+  border-color: var(--uva);
+  background: var(--uva-soft);
+  color: var(--ink)
+}
+
+.app.chapando .paes,
+.app.pronto .paes {
+  pointer-events: none;
+  opacity: .5
+}
+
+/* Card de Massas (Cantina da Nonna) */
+.palco--massas {
+  background: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, .12) 1px, transparent 0) 0 0/22px 22px, #2a1f18
+}
+
+.app--massa {
+  background: #ffffff;
+  color: #261a14
+}
+
+.app__topo--massa .app__casa {
+  color: #261a14
+}
+
+.app__topo--massa .app__mesa {
+  color: #8a7b70
+}
+
+.massa__stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f2e8dc;
+  border-radius: var(--r-pill);
+  padding: 4px 6px;
+  margin: 8px 0 12px;
+  gap: 4px
+}
+
+.massa__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: .78rem;
+  font-weight: 500;
+  color: #8a7b70;
+  border-radius: var(--r-pill);
+  user-select: none
+}
+
+.massa__step--active {
+  background: #261a14;
+  color: #ffffff;
+  font-weight: 600
+}
+
+.massa__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #261a14;
+  font-size: .7rem;
+  font-weight: 800
+}
+
+.massa__cab {
+  margin-bottom: 12px
+}
+
+.massa__titulo {
+  font: 800 1.45rem var(--font-display);
+  color: #261a14;
+  letter-spacing: -.03em
+}
+
+.massa__sub {
+  font-size: .8rem;
+  color: #75675c;
+  margin-top: 2px
+}
+
+.massa__prato-box {
+  background: #f6edde;
+  border-radius: 20px;
+  padding: 16px 8px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  position: relative;
+  overflow: hidden
+}
+
+.massa {
+  position: relative;
+  width: 200px;
+  height: 260px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center
+}
+
+.massa__panela {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(40, 25, 15, .22))
+}
+
+.massa__conteudo {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  pointer-events: none;
+  overflow: hidden
+}
+
+.massa-peca {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .4));
+  transform-origin: center center
+}
+
+.massa__legenda {
+  font-size: .75rem;
+  color: #8a7b70;
+  text-align: center;
+  margin-top: 8px
+}
+
+.massa__instrucao {
+  font-size: .84rem;
+  font-weight: 600;
+  color: #261a14;
+  text-align: center;
+  margin-top: 2px;
+  margin-bottom: 12px
+}
+
+.massa__tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px
+}
+
+.massa__tab {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: var(--r-pill);
+  font-size: .78rem;
+  font-weight: 600;
+  border: 1.5px solid #ded6cc;
+  background: #ffffff;
+  color: #261a14;
+  text-align: center;
+  transition: all .15s
+}
+
+.massa__tab--active {
+  background: #261a14;
+  border-color: #261a14;
+  color: #ffffff
+}
+
+.massa__cubas {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px 4px;
+  justify-items: center;
+  align-items: start;
+  margin-bottom: 16px
+}
+
+.cuba-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 100%;
+  cursor: pointer;
+  position: relative
+}
+
+.cuba-art {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('imagens/massas/cuba.webp');
+  background-size: cover;
+  background-position: center;
+  filter: drop-shadow(0 4px 6px rgba(35, 20, 10, .18));
+  transition: transform .12s
+}
+
+.cuba-btn:active .cuba-art {
+  transform: scale(.94)
+}
+
+.cuba-item-img {
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+  z-index: 2;
+  pointer-events: none
+}
+
+.cuba-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #261a14;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  z-index: 3;
+  pointer-events: none
+}
+
+.cuba-menos {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  background: #261a14;
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  z-index: 4;
+  transition: all .15s;
+  cursor: pointer
+}
+
+.cuba-menos::after {
+  content: "";
+  position: absolute;
+  inset: -8px
+}
+
+.cuba-menos svg {
+  width: 11px;
+  height: 11px;
+  pointer-events: none
+}
+
+.cuba-menos:hover {
+  transform: scale(1.15);
+  background: #c02b20
+}
+
+.cuba-btn.on .cuba-badge {
+  display: flex
+}
+
+.cuba-btn.on .cuba-menos {
+  display: flex
+}
+
+.cuba-nome {
+  margin-top: 5px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #261a14;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 66px;
+  min-height: 2.4em;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center
+}
+
+.cuba-preco {
+  font-size: .68rem;
+  color: #75675c;
+  text-align: center;
+  margin-top: 1px
+}
+
+.pedir--massa {
+  background: #261a14;
+  color: #ffffff
+}
+
+.pedir--massa:hover {
+  background: #3a2920
+}
+
+.pedir--massa .pedir__preco {
+  background: rgba(255, 255, 255, .16);
+  color: #ffffff
+}
+
+/* Massas: stepper numbers */
+.massa__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  font-size: .78rem;
+  font-weight: 500;
+  color: #8a7b70;
+  border-radius: var(--r-pill);
+  user-select: none;
+  flex: 1;
+  justify-content: center
+}
+
+.massa__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c4b8aa;
+  color: #261a14;
+  font-size: .7rem;
+  font-weight: 800
+}
+
+.massa__step--active .massa__step-num {
+  background: #ffffff
+}
+
+.massa__step--done {
+  color: #5c9e5c
+}
+
+.massa__step--done .massa__step-num {
+  background: #5c9e5c;
+  color: #fff
+}
+
+/* Camadas sobre a frigideira */
+.massa__camada-molho {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 136px;
+  height: 136px;
+  object-fit: cover;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2
+}
+
+.massa__camada-tipo {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3
+}
+
+/* Molho borbulhando */
+.massa-bolha {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, .8), rgba(255, 255, 255, .3) 50%, transparent 70%);
+  z-index: 4
+}
+
+/* Prato pronto */
+.massa__prato-pronto {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0 8px
+}
+
+.massa__prato-pronto-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 8px 16px rgba(40, 20, 10, .3))
+}
+
+/* Cubas de molho/tipo/final */
+.massa__cubas--molho {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 8px
+}
+
+.massa__cubas--tipo {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 4px
+}
+
+.massa__cubas--tipo .cuba-art {
+  width: 46px;
+  height: 46px
+}
+
+.massa__cubas--tipo .cuba-nome {
+  font-size: .66rem;
+  max-width: 56px
+}
+
+.massa__cubas--final {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 8px
+}
+
+/* Seleção ativa nas cubas de molho/tipo/final */
+.cuba-btn.cuba-selecionado .cuba-art {
+  box-shadow: 0 0 0 3px #261a14, 0 0 0 5px rgba(38, 26, 20, .25);
+  transform: scale(1.08)
+}
+
+/* Vapor sobre frigideira */
+.massa-vapor {
+  position: absolute;
+  z-index: 5;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(5px);
+  background: radial-gradient(circle, rgba(255, 255, 255, .75), rgba(255, 255, 255, .25) 50%, transparent 70%)
+}
+
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 32px max(16px, calc((100% - 1180px)/2));
+  background: var(--noite);
+  color: var(--on-noite-2);
+  font-size: .85rem
+}
+
+@media(max-width:440px) {
+  .so-largo {
+    display: none
+  }
+
+  .palco {
+    padding: 16px 10px
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  html {
+    scroll-behavior: auto
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important
+  }
+}
+
+/* ================================================================
+   CARROSSEL — layout 2 colunas: imagem à esquerda, opções à direita
+   ================================================================ */
+
+/* Hero mais compacto */
+.hero { padding: 24px 0 0 !important; }
+.hero__sub { margin-top: 6px !important; }
+
+/* Carrossel nav compacto */
+.carrossel-nav { margin-top: 8px !important; padding: 4px !important; }
+.carrossel-tab { padding: 6px 6px 5px !important; }
+.carrossel-tab__icone { font-size: 1.1rem !important; }
+.carrossel-dots { margin-top: 6px !important; }
+
+/* Palco: altura máxima, sem overflow externo */
+.demos--carrossel > .palco {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;   /* card ocupa toda a largura */
+  height: calc(100vh - 155px) !important;
+  min-height: 400px !important;
+  overflow: hidden !important;
+  overflow-y: hidden !important;
+  padding: 10px 20px 8px !important;
+  gap: 8px !important;
+}
+
+.demos--carrossel > .palco > .palco__cab { flex-shrink: 0 !important; }
+
+/* App: flex-column, preenche palco inteiramente — sem max-width limitante */
+.demos--carrossel .app {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.demos--carrossel .app__topo {
+  padding: 8px 16px 2px !important;
+  flex-shrink: 0 !important;
+}
+
+.demos--carrossel .app__rodape {
+  flex-shrink: 0 !important;
+  padding: 4px 16px 10px !important;
+}
+
+.demos--carrossel .pedir { min-height: 46px !important; }
+
+/* Vista: sem scroll — tudo deve caber */
+.demos--carrossel .vista {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 16px !important;
+}
+
+/* ================================================================
+   PIZZA — 2 colunas: pizza à esquerda, dica + ingredientes à direita
+   ================================================================ */
+
+.demos--carrossel #slidePizza .vista {
+  display: grid !important;
+  grid-template-columns: 260px 1fr !important;
+  grid-template-rows: auto auto 1fr !important;
+  gap: 0 20px !important;
+  align-items: start !important;
+  overflow: visible !important;
+}
+
+/* Título + tamanhos: linha inteira */
+.demos--carrossel #slidePizza .app__cab {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin-bottom: 2px !important;
+}
+
+/* Pizza: coluna esquerda, linhas 2-3 */
+.demos--carrossel #slidePizza .pizza {
+  grid-column: 1 !important;
+  grid-row: 2 / 4 !important;
+  max-width: 260px !important;
+  width: 260px !important;
+  margin: 4px 0 0 !important;
+  align-self: center !important;
+}
+
+/* Dica: coluna direita, linha 2 */
+.demos--carrossel #slidePizza .app__dica {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  text-align: left !important;
+  margin-top: 6px !important;
+  font-size: .7rem !important;
+  min-height: auto !important;
+}
+
+/* Ingredientes: coluna direita, linha 3 — 7 cols = 14 itens em 2 linhas */
+.demos--carrossel #slidePizza .ingredientes {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  margin: 4px 0 0 !important;
+  gap: 0 !important;
+}
+
+/* Chips compactos — tamanho para caber 7 por linha */
+.demos--carrossel .well {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.demos--carrossel .chip-art {
+  width: 40px !important;
+  height: 33px !important;
+}
+
+.demos--carrossel .chip { padding: 4px 0 3px !important; }
+.demos--carrossel .chip-nome { font-size: .62rem !important; }
+.demos--carrossel .chip-preco { font-size: .56rem !important; margin-top: -1px !important; }
+
+/* Botões de tamanho P/M/G */
+.demos--carrossel .tamanhos button {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: .8rem !important;
+}
+.demos--carrossel .tamanhos { gap: 4px !important; }
+
+/* ================================================================
+   HAMBURGER — 2 colunas: burger à esquerda, pão + ingredientes à direita
+   ================================================================ */
+
+.demos--carrossel #slideLanche .vista {
+  display: grid !important;
+  grid-template-columns: 240px 1fr !important;
+  grid-template-rows: auto auto auto 1fr !important;
+  gap: 0 20px !important;
+  align-items: start !important;
+  overflow: visible !important;
+}
+
+/* Título: linha inteira */
+.demos--carrossel #slideLanche .app__cab {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin-bottom: 2px !important;
+}
+
+/* Burger: coluna esquerda, linhas 2-4 (centralizado verticalmente) */
+.demos--carrossel #slideLanche .lanche {
+  grid-column: 1 !important;
+  grid-row: 2 / 5 !important;
+  height: 210px !important;
+  width: 240px !important;
+  margin: 2px 0 0 !important;
+  align-self: center !important;
+}
+
+/* Dica: coluna direita, linha 2 */
+.demos--carrossel #slideLanche .app__dica {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  text-align: left !important;
+  margin-top: 6px !important;
+  font-size: .7rem !important;
+  min-height: auto !important;
+}
+
+/* Pães: coluna direita, linha 3 */
+.demos--carrossel #slideLanche .paes {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+  margin-top: 4px !important;
+  gap: 4px !important;
+}
+
+.demos--carrossel .paes button {
+  min-height: 38px !important;
+  padding: 3px 2px !important;
+  font-size: .64rem !important;
+}
+
+.demos--carrossel .paes button img {
+  width: 32px !important;
+  height: 16px !important;
+}
+
+/* Ingredientes hamburger: coluna direita, linha 4 — 10 cols = 20 itens em 2 linhas */
+.demos--carrossel #slideLanche .ingredientes {
+  grid-column: 2 !important;
+  grid-row: 4 !important;
+  grid-template-columns: repeat(10, 1fr) !important;
+  margin: 4px 0 0 !important;
+  gap: 0 !important;
+}
+
+/* ================================================================
+   MASSAS — 2 colunas: frigideira à esquerda, controles à direita
+   ================================================================ */
+
+.demos--carrossel #slideMassa .vista {
+  display: grid !important;
+  grid-template-columns: 230px 1fr !important;
+  grid-template-rows: auto auto auto 1fr !important;
+  gap: 0 20px !important;
+  align-items: start !important;
+  overflow: visible !important;
+  padding: 0 20px !important;
+}
+
+/* Stepper: linha inteira */
+.demos--carrossel #slideMassa .massa__stepper {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin: 4px 0 6px !important;
+  padding: 3px 5px !important;
+}
+
+/* Frigideira: coluna esquerda, linhas 2-4 */
+.demos--carrossel #slideMassa .massa__prato-box {
+  grid-column: 1 !important;
+  grid-row: 2 / 5 !important;
+  min-height: 200px !important;
+  padding: 12px 10px 10px !important;
+  align-self: start !important;
+}
+
+/* Título da etapa: coluna direita, linha 2 */
+.demos--carrossel #slideMassa .massa__cab {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  margin-bottom: 2px !important;
+  margin-top: 2px !important;
+}
+
+/* Instrução: coluna direita, linha 3 */
+.demos--carrossel #slideMassa .massa__instrucao {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+  font-size: .72rem !important;
+  text-align: left !important;
+}
+
+/* Etapas dinâmicas: coluna direita, linha 4 */
+.demos--carrossel #slideMassa #massaEtapa1,
+.demos--carrossel #slideMassa #massaEtapa2,
+.demos--carrossel #slideMassa #massaEtapa3,
+.demos--carrossel #slideMassa #massaEtapa4 {
+  grid-column: 2 !important;
+  grid-row: 4 !important;
+  overflow-y: auto !important;
+  max-height: 200px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #c4b8aa transparent !important;
+}
+
+.demos--carrossel #slideMassa #massaEtapa1::-webkit-scrollbar,
+.demos--carrossel #slideMassa #massaEtapa2::-webkit-scrollbar,
+.demos--carrossel #slideMassa #massaEtapa3::-webkit-scrollbar,
+.demos--carrossel #slideMassa #massaEtapa4::-webkit-scrollbar { width: 3px; }
+
+.demos--carrossel #slideMassa #massaEtapa1::-webkit-scrollbar-thumb,
+.demos--carrossel #slideMassa #massaEtapa2::-webkit-scrollbar-thumb,
+.demos--carrossel #slideMassa #massaEtapa3::-webkit-scrollbar-thumb,
+.demos--carrossel #slideMassa #massaEtapa4::-webkit-scrollbar-thumb {
+  background: #c4b8aa;
+  border-radius: 99px;
+}
+
+/* Legenda: esconder — frigideira já comunica visualmente */
+.demos--carrossel #slideMassa .massa__legenda {
+  display: none !important;
+}
+
+/* Alinhamento da instrução — REMOVIDO da coluna 2 linha 2 (estava duplicado) */
+
+/* Tamanhos da frigideira — maior com card mais largo */
+.demos--carrossel .massa {
+  width: 185px !important;
+  height: 240px !important;
+}
+
+.demos--carrossel .massa__panela { width: 185px !important; }
+
+.demos--carrossel .massa__conteudo {
+  width: 128px !important;
+  height: 128px !important;
+  top: 14px !important;
+}
+
+.demos--carrossel .massa__camada-molho {
+  width: 128px !important;
+  height: 128px !important;
+  top: 14px !important;
+}
+
+.demos--carrossel .massa__camada-tipo {
+  width: 122px !important;
+  height: 122px !important;
+  top: 14px !important;
+}
+
+/* Título e sub da etapa compactos */
+.demos--carrossel .massa__titulo { font-size: 1.05rem !important; }
+.demos--carrossel .massa__sub { font-size: .7rem !important; margin-top: 1px !important; }
+
+/* Step compacto */
+.demos--carrossel .massa__step {
+  padding: 4px 6px !important;
+  font-size: .66rem !important;
+}
+
+/* Tabs de categoria */
+.demos--carrossel .massa__tabs {
+  gap: 4px !important;
+  margin-bottom: 6px !important;
+}
+
+.demos--carrossel .massa__tab {
+  padding: 5px 0 !important;
+  font-size: .68rem !important;
+}
+
+/* Cubas */
+.demos--carrossel .cuba-art {
+  width: 46px !important;
+  height: 46px !important;
+}
+
+.demos--carrossel .massa__cubas {
+  gap: 8px 4px !important;
+  margin-bottom: 4px !important;
+}
+
+.demos--carrossel .massa__cubas--molho {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px 6px !important;
+}
+
+.demos--carrossel .massa__cubas--tipo {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px 4px !important;
+}
+
+.demos--carrossel .massa__cubas--final {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px 6px !important;
+}
+
+.demos--carrossel .cuba-nome {
+  font-size: .64rem !important;
+  min-height: 2em !important;
+  max-width: 60px !important;
+}
+
+.demos--carrossel .cuba-preco { font-size: .6rem !important; }
+
+
+/* ================================================================
+   MOBILE (≤767px) — reverte para layout VERTICAL original
+   O carrossel de navegação continua, mas o conteúdo de cada card
+   volta ao formato empilhado original (imagem em cima, ingredientes
+   abaixo), igual ao design antes das mudanças de 2 colunas.
+   ================================================================ */
+@media (max-width: 767px) {
+
+  /* Palco: sem altura fixa — rola livremente */
+  .demos--carrossel > .palco {
+    height: auto !important;
+    min-height: 90vh !important;
+    overflow-y: auto !important;
+    align-items: center !important;
+    padding: 16px 12px 20px !important;
+  }
+
+  /* App: centralizado, 440px máximo */
+  .demos--carrossel .app {
+    max-width: 440px !important;
+    width: 100% !important;
+  }
+
+  /* Vista: bloco normal, sem grid */
+  .demos--carrossel .vista,
+  .demos--carrossel #slidePizza .vista,
+  .demos--carrossel #slideLanche .vista,
+  .demos--carrossel #slideMassa .vista {
+    display: block !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    padding: 0 16px !important;
+  }
+
+  /* ── PIZZA ── */
+  .demos--carrossel #slidePizza .app__cab {
+    display: flex !important;
+  }
+  .demos--carrossel #slidePizza .pizza {
+    max-width: 300px !important;
+    width: 100% !important;
+    margin: 8px auto 0 !important;
+    align-self: unset !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demos--carrossel #slidePizza .app__dica {
+    text-align: center !important;
+    margin-top: 6px !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demos--carrossel #slidePizza .ingredientes {
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+    margin: 8px 0 12px !important;
+  }
+
+  /* ── HAMBURGER ── */
+  .demos--carrossel #slideLanche .lanche {
+    height: 300px !important;
+    width: 100% !important;
+    max-width: 290px !important;
+    margin: 8px auto 0 !important;
+    align-self: unset !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demos--carrossel #slideLanche .app__dica {
+    text-align: center !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demos--carrossel #slideLanche .paes {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    margin-top: 10px !important;
+    gap: 6px !important;
+  }
+  .demos--carrossel .paes button {
+    min-height: 52px !important;
+    padding: 6px 4px 5px !important;
+    font-size: .72rem !important;
+  }
+  .demos--carrossel .paes button img {
+    width: 40px !important;
+    height: 20px !important;
+  }
+  .demos--carrossel #slideLanche .ingredientes {
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+    margin: 10px 0 12px !important;
+  }
+
+  /* ── MASSAS ── */
+  .demos--carrossel #slideMassa .massa__stepper {
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  .demos--carrossel #slideMassa .massa__prato-box {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    min-height: 250px !important;
+    padding: 16px 8px 8px !important;
+  }
+  .demos--carrossel #slideMassa .massa__cab {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    margin-bottom: 12px !important;
+  }
+  .demos--carrossel #slideMassa .massa__instrucao {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    text-align: center !important;
+    margin-top: 2px !important;
+    margin-bottom: 12px !important;
+    font-size: .84rem !important;
+  }
+  .demos--carrossel #slideMassa #massaEtapa1,
+  .demos--carrossel #slideMassa #massaEtapa2,
+  .demos--carrossel #slideMassa #massaEtapa3,
+  .demos--carrossel #slideMassa #massaEtapa4 {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+  }
+  .demos--carrossel #slideMassa .massa__legenda {
+    display: block !important;
+  }
+
+  /* Frigideira: tamanho original */
+  .demos--carrossel .massa {
+    width: 200px !important;
+    height: 260px !important;
+  }
+  .demos--carrossel .massa__panela { width: 200px !important; }
+  .demos--carrossel .massa__conteudo {
+    width: 136px !important;
+    height: 136px !important;
+    top: 14px !important;
+  }
+  .demos--carrossel .massa__camada-molho {
+    width: 136px !important;
+    height: 136px !important;
+    top: 14px !important;
+  }
+  .demos--carrossel .massa__camada-tipo {
+    width: 130px !important;
+    height: 130px !important;
+    top: 14px !important;
+  }
+  .demos--carrossel .massa__cubas--molho {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .demos--carrossel .massa__cubas--tipo {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .demos--carrossel .massa__cubas--final {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* ── CHIPS: tamanhos originais ── */
+  .demos--carrossel .well {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  .demos--carrossel .chip-art {
+    width: 48px !important;
+    height: 40px !important;
+  }
+  .demos--carrossel .chip { padding: 7px 0 4px !important; }
+  .demos--carrossel .chip-nome { font-size: .7rem !important; }
+  .demos--carrossel .chip-preco { font-size: .62rem !important; margin-top: -3px !important; }
+
+  /* Botões P/M/G originais */
+  .demos--carrossel .tamanhos button {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1rem !important;
+  }
+  .demos--carrossel .tamanhos { gap: 4px !important; }
+
+  /* Título e sub das massas */
+  .demos--carrossel .massa__titulo { font-size: 1.45rem !important; }
+  .demos--carrossel .massa__sub { font-size: .8rem !important; }
+  .demos--carrossel .massa__step { font-size: .78rem !important; padding: 6px 8px !important; }
+  .demos--carrossel .cuba-art { width: 54px !important; height: 54px !important; }
+  .demos--carrossel .cuba-nome { font-size: .72rem !important; min-height: 2.4em !important; max-width: 66px !important; }
+  .demos--carrossel .cuba-preco { font-size: .68rem !important; }
+}
