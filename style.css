@@ -1236,14 +1236,15 @@ button {
 
 .massa__conteudo {
   position: absolute;
-  top: 14px;
+  top: 22px;
   left: 50%;
   transform: translateX(-50%);
-  width: 136px;
-  height: 136px;
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
   pointer-events: none;
-  overflow: hidden
+  overflow: hidden;
+  z-index: 4
 }
 
 .massa-peca {
@@ -1485,11 +1486,11 @@ button {
 /* Camadas sobre a frigideira */
 .massa__camada-molho {
   position: absolute;
-  top: 14px;
+  top: 22px;
   left: 50%;
   transform: translateX(-50%);
-  width: 136px;
-  height: 136px;
+  width: 128px;
+  height: 128px;
   object-fit: cover;
   border-radius: 50%;
   pointer-events: none;
@@ -1498,11 +1499,11 @@ button {
 
 .massa__camada-tipo {
   position: absolute;
-  top: 14px;
+  top: 22px;
   left: 50%;
   transform: translateX(-50%);
-  width: 130px;
-  height: 130px;
+  width: 124px;
+  height: 124px;
   object-fit: contain;
   border-radius: 50%;
   pointer-events: none;
@@ -1615,20 +1616,38 @@ button {
    ================================================================ */
 
 /* Hero mais compacto */
-.hero { padding: 24px 0 0 !important; }
-.hero__sub { margin-top: 6px !important; }
+.hero {
+  padding: 24px 0 0 !important;
+}
+
+.hero__sub {
+  margin-top: 6px !important;
+}
 
 /* Carrossel nav compacto */
-.carrossel-nav { margin-top: 8px !important; padding: 4px !important; }
-.carrossel-tab { padding: 6px 6px 5px !important; }
-.carrossel-tab__icone { font-size: 1.1rem !important; }
-.carrossel-dots { margin-top: 6px !important; }
+.carrossel-nav {
+  margin-top: 8px !important;
+  padding: 4px !important;
+}
+
+.carrossel-tab {
+  padding: 6px 6px 5px !important;
+}
+
+.carrossel-tab__icone {
+  font-size: 1.1rem !important;
+}
+
+.carrossel-dots {
+  margin-top: 6px !important;
+}
 
 /* Palco: altura máxima, sem overflow externo */
-.demos--carrossel > .palco {
+.demos--carrossel>.palco {
   display: flex !important;
   flex-direction: column !important;
-  align-items: stretch !important;   /* card ocupa toda a largura */
+  align-items: stretch !important;
+  /* card ocupa toda a largura */
   height: calc(100vh - 155px) !important;
   min-height: 400px !important;
   overflow: hidden !important;
@@ -1637,7 +1656,9 @@ button {
   gap: 8px !important;
 }
 
-.demos--carrossel > .palco > .palco__cab { flex-shrink: 0 !important; }
+.demos--carrossel>.palco>.palco__cab {
+  flex-shrink: 0 !important;
+}
 
 /* App: flex-column, preenche palco inteiramente — sem max-width limitante */
 .demos--carrossel .app {
@@ -1659,7 +1680,9 @@ button {
   padding: 4px 16px 10px !important;
 }
 
-.demos--carrossel .pedir { min-height: 46px !important; }
+.demos--carrossel .pedir {
+  min-height: 46px !important;
+}
 
 /* Vista: sem scroll — tudo deve caber */
 .demos--carrossel .vista {
@@ -1729,9 +1752,18 @@ button {
   height: 33px !important;
 }
 
-.demos--carrossel .chip { padding: 4px 0 3px !important; }
-.demos--carrossel .chip-nome { font-size: .62rem !important; }
-.demos--carrossel .chip-preco { font-size: .56rem !important; margin-top: -1px !important; }
+.demos--carrossel .chip {
+  padding: 4px 0 3px !important;
+}
+
+.demos--carrossel .chip-nome {
+  font-size: .62rem !important;
+}
+
+.demos--carrossel .chip-preco {
+  font-size: .56rem !important;
+  margin-top: -1px !important;
+}
 
 /* Botões de tamanho P/M/G */
 .demos--carrossel .tamanhos button {
@@ -1739,7 +1771,10 @@ button {
   height: 32px !important;
   font-size: .8rem !important;
 }
-.demos--carrossel .tamanhos { gap: 4px !important; }
+
+.demos--carrossel .tamanhos {
+  gap: 4px !important;
+}
 
 /* ================================================================
    HAMBURGER — 2 colunas: burger à esquerda, pão + ingredientes à direita
@@ -1874,7 +1909,9 @@ button {
 .demos--carrossel #slideMassa #massaEtapa1::-webkit-scrollbar,
 .demos--carrossel #slideMassa #massaEtapa2::-webkit-scrollbar,
 .demos--carrossel #slideMassa #massaEtapa3::-webkit-scrollbar,
-.demos--carrossel #slideMassa #massaEtapa4::-webkit-scrollbar { width: 3px; }
+.demos--carrossel #slideMassa #massaEtapa4::-webkit-scrollbar {
+  width: 3px;
+}
 
 .demos--carrossel #slideMassa #massaEtapa1::-webkit-scrollbar-thumb,
 .demos--carrossel #slideMassa #massaEtapa2::-webkit-scrollbar-thumb,
@@ -1897,29 +1934,40 @@ button {
   height: 240px !important;
 }
 
-.demos--carrossel .massa__panela { width: 185px !important; }
+.demos--carrossel .massa__panela {
+  width: 185px !important;
+}
 
 .demos--carrossel .massa__conteudo {
-  width: 128px !important;
-  height: 128px !important;
-  top: 14px !important;
+  width: 120px !important;
+  height: 120px !important;
+  top: 20px !important;
+  z-index: 4 !important;
 }
 
 .demos--carrossel .massa__camada-molho {
-  width: 128px !important;
-  height: 128px !important;
-  top: 14px !important;
+  width: 120px !important;
+  height: 120px !important;
+  top: 20px !important;
+  z-index: 2 !important;
 }
 
 .demos--carrossel .massa__camada-tipo {
-  width: 122px !important;
-  height: 122px !important;
-  top: 14px !important;
+  width: 116px !important;
+  height: 116px !important;
+  top: 20px !important;
+  z-index: 3 !important;
 }
 
 /* Título e sub da etapa compactos */
-.demos--carrossel .massa__titulo { font-size: 1.05rem !important; }
-.demos--carrossel .massa__sub { font-size: .7rem !important; margin-top: 1px !important; }
+.demos--carrossel .massa__titulo {
+  font-size: 1.05rem !important;
+}
+
+.demos--carrossel .massa__sub {
+  font-size: .7rem !important;
+  margin-top: 1px !important;
+}
 
 /* Step compacto */
 .demos--carrossel .massa__step {
@@ -1970,7 +2018,9 @@ button {
   max-width: 60px !important;
 }
 
-.demos--carrossel .cuba-preco { font-size: .6rem !important; }
+.demos--carrossel .cuba-preco {
+  font-size: .6rem !important;
+}
 
 
 /* ================================================================
@@ -1982,7 +2032,7 @@ button {
 @media (max-width: 767px) {
 
   /* Palco: sem altura fixa — rola livremente */
-  .demos--carrossel > .palco {
+  .demos--carrossel>.palco {
     height: auto !important;
     min-height: 90vh !important;
     overflow-y: auto !important;
@@ -2011,6 +2061,7 @@ button {
   .demos--carrossel #slidePizza .app__cab {
     display: flex !important;
   }
+
   .demos--carrossel #slidePizza .pizza {
     max-width: 300px !important;
     width: 100% !important;
@@ -2019,12 +2070,14 @@ button {
     grid-column: unset !important;
     grid-row: unset !important;
   }
+
   .demos--carrossel #slidePizza .app__dica {
     text-align: center !important;
     margin-top: 6px !important;
     grid-column: unset !important;
     grid-row: unset !important;
   }
+
   .demos--carrossel #slidePizza .ingredientes {
     grid-template-columns: repeat(5, 1fr) !important;
     grid-column: unset !important;
@@ -2042,26 +2095,31 @@ button {
     grid-column: unset !important;
     grid-row: unset !important;
   }
+
   .demos--carrossel #slideLanche .app__dica {
     text-align: center !important;
     grid-column: unset !important;
     grid-row: unset !important;
   }
+
   .demos--carrossel #slideLanche .paes {
     grid-column: unset !important;
     grid-row: unset !important;
     margin-top: 10px !important;
     gap: 6px !important;
   }
+
   .demos--carrossel .paes button {
     min-height: 52px !important;
     padding: 6px 4px 5px !important;
     font-size: .72rem !important;
   }
+
   .demos--carrossel .paes button img {
     width: 40px !important;
     height: 20px !important;
   }
+
   .demos--carrossel #slideLanche .ingredientes {
     grid-template-columns: repeat(5, 1fr) !important;
     grid-column: unset !important;
@@ -2074,17 +2132,20 @@ button {
     grid-column: unset !important;
     grid-row: unset !important;
   }
+
   .demos--carrossel #slideMassa .massa__prato-box {
     grid-column: unset !important;
     grid-row: unset !important;
     min-height: 250px !important;
     padding: 16px 8px 8px !important;
   }
+
   .demos--carrossel #slideMassa .massa__cab {
     grid-column: unset !important;
     grid-row: unset !important;
     margin-bottom: 12px !important;
   }
+
   .demos--carrossel #slideMassa .massa__instrucao {
     grid-column: unset !important;
     grid-row: unset !important;
@@ -2093,6 +2154,7 @@ button {
     margin-bottom: 12px !important;
     font-size: .84rem !important;
   }
+
   .demos--carrossel #slideMassa #massaEtapa1,
   .demos--carrossel #slideMassa #massaEtapa2,
   .demos--carrossel #slideMassa #massaEtapa3,
@@ -2102,6 +2164,7 @@ button {
     overflow-y: visible !important;
     max-height: none !important;
   }
+
   .demos--carrossel #slideMassa .massa__legenda {
     display: block !important;
   }
@@ -2111,28 +2174,40 @@ button {
     width: 200px !important;
     height: 260px !important;
   }
-  .demos--carrossel .massa__panela { width: 200px !important; }
+
+  .demos--carrossel .massa__panela {
+    width: 200px !important;
+  }
+
   .demos--carrossel .massa__conteudo {
-    width: 136px !important;
-    height: 136px !important;
-    top: 14px !important;
+    width: 128px !important;
+    height: 128px !important;
+    top: 22px !important;
+    z-index: 4 !important;
   }
+
   .demos--carrossel .massa__camada-molho {
-    width: 136px !important;
-    height: 136px !important;
-    top: 14px !important;
+    width: 128px !important;
+    height: 128px !important;
+    top: 22px !important;
+    z-index: 2 !important;
   }
+
   .demos--carrossel .massa__camada-tipo {
-    width: 130px !important;
-    height: 130px !important;
-    top: 14px !important;
+    width: 124px !important;
+    height: 124px !important;
+    top: 22px !important;
+    z-index: 3 !important;
   }
+
   .demos--carrossel .massa__cubas--molho {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+
   .demos--carrossel .massa__cubas--tipo {
     grid-template-columns: repeat(4, 1fr) !important;
   }
+
   .demos--carrossel .massa__cubas--final {
     grid-template-columns: repeat(3, 1fr) !important;
   }
@@ -2142,13 +2217,24 @@ button {
     width: 52px !important;
     height: 52px !important;
   }
+
   .demos--carrossel .chip-art {
     width: 48px !important;
     height: 40px !important;
   }
-  .demos--carrossel .chip { padding: 7px 0 4px !important; }
-  .demos--carrossel .chip-nome { font-size: .7rem !important; }
-  .demos--carrossel .chip-preco { font-size: .62rem !important; margin-top: -3px !important; }
+
+  .demos--carrossel .chip {
+    padding: 7px 0 4px !important;
+  }
+
+  .demos--carrossel .chip-nome {
+    font-size: .7rem !important;
+  }
+
+  .demos--carrossel .chip-preco {
+    font-size: .62rem !important;
+    margin-top: -3px !important;
+  }
 
   /* Botões P/M/G originais */
   .demos--carrossel .tamanhos button {
@@ -2156,13 +2242,37 @@ button {
     height: 36px !important;
     font-size: 1rem !important;
   }
-  .demos--carrossel .tamanhos { gap: 4px !important; }
+
+  .demos--carrossel .tamanhos {
+    gap: 4px !important;
+  }
 
   /* Título e sub das massas */
-  .demos--carrossel .massa__titulo { font-size: 1.45rem !important; }
-  .demos--carrossel .massa__sub { font-size: .8rem !important; }
-  .demos--carrossel .massa__step { font-size: .78rem !important; padding: 6px 8px !important; }
-  .demos--carrossel .cuba-art { width: 54px !important; height: 54px !important; }
-  .demos--carrossel .cuba-nome { font-size: .72rem !important; min-height: 2.4em !important; max-width: 66px !important; }
-  .demos--carrossel .cuba-preco { font-size: .68rem !important; }
+  .demos--carrossel .massa__titulo {
+    font-size: 1.45rem !important;
+  }
+
+  .demos--carrossel .massa__sub {
+    font-size: .8rem !important;
+  }
+
+  .demos--carrossel .massa__step {
+    font-size: .78rem !important;
+    padding: 6px 8px !important;
+  }
+
+  .demos--carrossel .cuba-art {
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  .demos--carrossel .cuba-nome {
+    font-size: .72rem !important;
+    min-height: 2.4em !important;
+    max-width: 66px !important;
+  }
+
+  .demos--carrossel .cuba-preco {
+    font-size: .68rem !important;
+  }
 }

@@ -5,7 +5,7 @@
   const tx = (s, v) => v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s;
   const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  function vibrar(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+  function vibrar(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) { } }
   function dizer(txt, acao, rotulo, app = "pizza") {
     const d = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") }[app];
     if (!d) return;
@@ -145,8 +145,8 @@
     }
     if (app === "massa") {
       const it = MASSA.ingredientes.filter(i => (estado.massaPorcoes[i.id] || 0) > 0).map(i => i.nome.toLowerCase() + ((estado.massaPorcoes[i.id] || 0) > 1 ? " ×" + (estado.massaPorcoes[i.id] || 0) : ""));
-      const molhoNome = estado.massaMolho ? (MOLHOS_MASSA.find(function(m) { return m.id === estado.massaMolho; }) || {}).nome || estado.massaMolho : null;
-      const tipoNome  = estado.massaRecipiente ? (TIPOS_MASSA.find(function(t) { return t.id === estado.massaRecipiente; }) || {}).nome || estado.massaRecipiente : null;
+      const molhoNome = estado.massaMolho ? (MOLHOS_MASSA.find(function (m) { return m.id === estado.massaMolho; }) || {}).nome || estado.massaMolho : null;
+      const tipoNome = estado.massaRecipiente ? (TIPOS_MASSA.find(function (t) { return t.id === estado.massaRecipiente; }) || {}).nome || estado.massaRecipiente : null;
       var linha = tipoNome ? tipoNome : "Massa";
       if (molhoNome) linha += " ao " + molhoNome.toLowerCase();
       if (it.length) linha += ": " + it.join(", ");
@@ -437,7 +437,7 @@
       { transform: T(de.x, de.y, 1, 0), opacity: 1 },
       { transform: T((de.x + alvo.x) / 2, Math.min(de.y, alvo.y) - 50, 0.7, -12), opacity: 1, offset: 0.4 },
       { transform: T(alvo.x, alvo.y, 0.18, -20), opacity: 0.3 },
-    ], { duration: 420, easing: "cubic-bezier(.3,.6,.4,1)", fill: "both" }).finished.catch(() => {}).then(() => v.remove());
+    ], { duration: 420, easing: "cubic-bezier(.3,.6,.4,1)", fill: "both" }).finished.catch(() => { }).then(() => v.remove());
   }
 
   function empilhar(saiu, op = {}) {
@@ -491,7 +491,7 @@
           { transform: "translateY(0) rotate(0) scale(1, 1)", offset: 0.7, easing: "ease-out" },
           { transform: "translateY(0) scale(1.04, .88)", offset: 0.82 },
           { transform: "translateY(0) scale(1, 1)" },
-        ], { duration: queda / 0.7, fill: "backwards" }).finished.catch(() => {}).then(() => { el.style.zIndex = String(z + 1); });
+        ], { duration: queda / 0.7, fill: "backwards" }).finished.catch(() => { }).then(() => { el.style.zIndex = String(z + 1); });
         setTimeout(() => {
           vibrar(10);
           pilha.animate([{ transform: `scale(${esc})` }, { transform: `scale(${esc * 1.02}, ${esc * 0.97})` }, { transform: `scale(${esc})` }], { duration: 240, easing: "ease-out" });
@@ -1025,7 +1025,7 @@
   /* ---- Pizza: o forno ---- */
   const fornoEl = $("#forno"), fornoVid = $("#fornoVid"), fogoVid = $("#fogoVid"), brilho = $("#brilho");
   const calor = $("#calor"), anel = $("#anel"), assadaEl = $("#assada"), appEl = $("#appPizza"), barraForno = $("#barra-pizza");
-  const tocar = v => { try { v.currentTime = 0; const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
+  const tocar = v => { try { v.currentTime = 0; const p = v.play(); if (p && p.catch) p.catch(() => { }); } catch (e) { } };
   function assar() {
     if (estado.forno === "assando") return;
     if (estado.forno === "assada") {
@@ -1095,7 +1095,7 @@
     appEl.classList.remove("assando");
     appEl.classList.add("assada");
     barraForno.getAnimations().forEach(a => a.cancel());
-    try { fornoVid.pause(); fogoVid.pause(); } catch (e) {}
+    try { fornoVid.pause(); fogoVid.pause(); } catch (e) { }
     vibrar([10, 40, 10]);
     entregar("pizza");
     dizer("Feita no fogo.", montarOutra, "Montar outra");
@@ -1159,32 +1159,32 @@
      MASSAS — stepper 4 etapas
      ================================================================ */
   const massaConteudo = $("#massaConteudo");
-  const massaEl        = $("#massa");
-  const massaMolhoImg  = $("#massaMolhoImg");
-  const massaTipoImg   = $("#massaTipoImg");
+  const massaEl = $("#massa");
+  const massaMolhoImg = $("#massaMolhoImg");
+  const massaTipoImg = $("#massaTipoImg");
 
   let massaEtapa = 1;
   let massaMolhoSel = null;
-  let massaTipoSel  = null;
+  let massaTipoSel = null;
 
   const MOLHOS_MASSA = [
-    { id: "bolonhesa", nome: "Bolonhesa",    img: "molho-bolonhesa.webp", tex: "tex-bolonhesa.webp" },
-    { id: "sugo",      nome: "Sugo",          img: "molho-sugo.webp",      tex: "tex-sugo.webp"      },
-    { id: "branco",    nome: "Molho branco",  img: "molho-branco.webp",    tex: "tex-branco.webp"    },
-    { id: "rose",      nome: "Rosé",          img: "molho-rose.webp",      tex: "tex-rose.webp"      },
-    { id: "3queijos",  nome: "4 queijos",     img: "molho-3queijos.webp",  tex: "tex-3queijos.webp"  },
-    { id: "alhoeoleo", nome: "Alho e Óleo",  img: "molho-alhoeoleo.webp", tex: "tex-alhoeoleo.webp" },
+    { id: "bolonhesa", nome: "Bolonhesa", img: "molho-bolonhesa.webp", tex: "tex-bolonhesa.webp" },
+    { id: "sugo", nome: "Sugo", img: "molho-sugo.webp", tex: "tex-sugo.webp" },
+    { id: "branco", nome: "Molho branco", img: "molho-branco.webp", tex: "tex-branco.webp" },
+    { id: "rose", nome: "Rosé", img: "molho-rose.webp", tex: "tex-rose.webp" },
+    { id: "3queijos", nome: "4 queijos", img: "molho-3queijos.webp", tex: "tex-3queijos.webp" },
+    { id: "alhoeoleo", nome: "Alho e Óleo", img: "molho-alhoeoleo.webp", tex: "tex-alhoeoleo.webp" },
   ];
   const TIPOS_MASSA = [
     { id: "espaguete", nome: "Espaguete", img: "massa-espaguete.webp" },
-    { id: "penne",     nome: "Penne",     img: "massa-penne.webp"     },
-    { id: "parafuso",  nome: "Parafuso",  img: "massa-parafuso.webp"  },
-    { id: "talharim",  nome: "Talharim",  img: "massa-talharim.webp"  },
+    { id: "penne", nome: "Penne", img: "massa-penne.webp" },
+    { id: "parafuso", nome: "Parafuso", img: "massa-parafuso.webp" },
+    { id: "talharim", nome: "Talharim", img: "massa-talharim.webp" },
   ];
   const FINALIZACOES = [
-    { id: "queijo-fin",   nome: "Muçarela extra", img: "queijo.webp",   pasta: "massas", preco: 3 },
-    { id: "catupiry-fin", nome: "Catupiry",        arte: "catupiry",    pasta: "pizza",  preco: 5 },
-    { id: "cheddar-fin",  nome: "Cheddar",         arte: "cheddar",     pasta: "pizza",  preco: 5 },
+    { id: "queijo-fin", nome: "Muçarela extra", img: "queijo.webp", pasta: "massas", preco: 3 },
+    { id: "catupiry-fin", nome: "Catupiry", arte: "catupiry", pasta: "pizza", preco: 5 },
+    { id: "cheddar-fin", nome: "Cheddar", arte: "cheddar", pasta: "pizza", preco: 5 },
   ];
 
   /* ---- Atualiza o stepper visual ---- */
@@ -1193,12 +1193,12 @@
     $$("#massaStepper .massa__step").forEach(el => {
       const n = Number(el.dataset.etapa);
       el.classList.toggle("massa__step--active", n === etapa);
-      el.classList.toggle("massa__step--done",   n < etapa);
+      el.classList.toggle("massa__step--done", n < etapa);
     });
     const titulos = ["", "Escolha o recheio", "Escolha o molho", "Tipo de massa", "Finalizar o prato"];
-    const subs    = ["", "Coloque quantos quiser · 2 toques é dupla", "Toque no molho para adicionar", "Escolha o formato da massa", "Adicione os toques finais"];
+    const subs = ["", "Coloque quantos quiser · 2 toques é dupla", "Toque no molho para adicionar", "Escolha o formato da massa", "Adicione os toques finais"];
     $("#massaTitulo").textContent = titulos[etapa];
-    $("#massaSub").textContent    = subs[etapa];
+    $("#massaSub").textContent = subs[etapa];
     $("#massaEtapa1").hidden = etapa !== 1;
     $("#massaEtapa2").hidden = etapa !== 2;
     $("#massaEtapa3").hidden = etapa !== 3;
@@ -1215,15 +1215,15 @@
     /* usa a textura tex-* como camada na frigideira; fallback para molho-*.webp */
     var texSrc = IMG_MASSA + (molho.tex || molho.img);
     /* cancela fade anterior para poder trocar o molho */
-    massaMolhoImg.getAnimations().forEach(function(a) { a.cancel(); });
+    massaMolhoImg.getAnimations().forEach(function (a) { a.cancel(); });
     massaMolhoImg.src = texSrc;
     massaMolhoImg.hidden = false;
     massaMolhoImg.style.opacity = "0";
     if (calmo) { massaMolhoImg.style.opacity = "1"; pronto && pronto(); return; }
     const concha = imgFixa(IMG_MASSA + "ferr-concha.webp", "ferramenta");
     const rMassa = massaEl.getBoundingClientRect();
-    const cx = rMassa.left + rMassa.width  * 0.5;
-    const cy = rMassa.top  + rMassa.height * 0.42;
+    const cx = rMassa.left + rMassa.width * 0.5;
+    const cy = rMassa.top + rMassa.height * 0.42;
     const ini = { x: rMassa.right + 60, y: rMassa.top - 60 };
     const ctl = { x: (ini.x + cx) / 2, y: ini.y - 40 };
     const larg = 120;
@@ -1260,13 +1260,13 @@
       b.style.cssText = "position:fixed;z-index:60;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.8),rgba(255,255,255,.3) 50%,transparent 70%)";
       const tam = 5 + Math.random() * 9;
       b.style.width = b.style.height = tam + "px";
-      b.style.left = (r.left + r.width  * (0.15 + 0.7 * Math.random())) + "px";
-      b.style.top  = (r.top  + r.height * (0.2  + 0.6 * Math.random())) + "px";
+      b.style.left = (r.left + r.width * (0.15 + 0.7 * Math.random())) + "px";
+      b.style.top = (r.top + r.height * (0.2 + 0.6 * Math.random())) + "px";
       document.body.appendChild(b);
       const dy = -(14 + Math.random() * 20);
       b.animate([
         { transform: "scale(.3)", opacity: 0 },
-        { transform: "scale(1)",  opacity: 0.8, offset: 0.3 },
+        { transform: "scale(1)", opacity: 0.8, offset: 0.3 },
         { transform: `scale(.7) translateY(${dy}px)`, opacity: 0 },
       ], { duration: 600 + Math.random() * 400, easing: "ease-out" }).onfinish = () => b.remove();
     }, i * 70);
@@ -1282,7 +1282,7 @@
       const tam = 18 + Math.random() * 22;
       v.style.width = v.style.height = tam + "px";
       v.style.left = (r.left + r.width * (0.1 + 0.8 * Math.random())) + "px";
-      v.style.top  = (r.top + r.height * 0.3) + "px";
+      v.style.top = (r.top + r.height * 0.3) + "px";
       document.body.appendChild(v);
       const dx = (Math.random() - 0.5) * 30;
       v.animate([
@@ -1300,9 +1300,9 @@
     massaTipoImg.hidden = false;
     if (calmo) { massaTipoImg.style.opacity = "1"; pronto && pronto(); return; }
     massaTipoImg.animate([
-      { transform: "translate(-50%,-50%) translateY(-80px) scale(.7) rotate(-8deg)", opacity: 0 },
-      { transform: "translate(-50%,-50%) translateY(4px) scale(1.08) rotate(2deg)", opacity: 1, offset: 0.7, easing: "cubic-bezier(.55,0,1,.45)" },
-      { transform: "translate(-50%,-50%) translateY(0) scale(1) rotate(0deg)", opacity: 1 },
+      { transform: "translateX(-50%) translateY(-80px) scale(.7) rotate(-8deg)", opacity: 0 },
+      { transform: "translateX(-50%) translateY(4px) scale(1.08) rotate(2deg)", opacity: 1, offset: 0.7, easing: "cubic-bezier(.55,0,1,.45)" },
+      { transform: "translateX(-50%) translateY(0) scale(1) rotate(0deg)", opacity: 1 },
     ], { duration: 520, easing: "ease-out", fill: "forwards" });
     setTimeout(() => {
       vaporizarFrigideira(massaConteudo, 8);
@@ -1315,11 +1315,11 @@
   function bisnagarFinal(item, pronto) {
     if (calmo || !massaEl) { pronto && pronto(); return; }
     const r = massaEl.getBoundingClientRect();
-    const cx = r.left + r.width  * 0.5;
-    const cy = r.top  + r.height * 0.42;
+    const cx = r.left + r.width * 0.5;
+    const cy = r.top + r.height * 0.42;
     const srcMap = {
       "catupiry-fin": IMG_PIZZA + "bisnaga-catupiry.webp",
-      "cheddar-fin":  IMG_PIZZA + "bisnaga-cheddar.webp"
+      "cheddar-fin": IMG_PIZZA + "bisnaga-cheddar.webp"
     };
     const bis = imgFixa(srcMap[item.id] || IMG_PIZZA + "bisnaga-catupiry.webp", "ferramenta");
     const larg = 100;
@@ -1386,7 +1386,7 @@
 
       const vImg = document.createElement("img");
       vImg.src = imgSrc;
-      vImg.onerror = function() { vImg.src = pastaDir + "t-" + baseArte + "-0.webp"; };
+      vImg.onerror = function () { vImg.src = pastaDir + "t-" + baseArte + "-0.webp"; };
       vImg.className = "voo";
       vImg.style.width = "28px";
       vImg.style.height = "28px";
@@ -1412,7 +1412,7 @@
           vImg.remove();
           const peca = document.createElement("img");
           peca.src = imgSrc;
-          peca.onerror = function() { peca.src = pastaDir + "t-" + baseArte + "-0.webp"; };
+          peca.onerror = function () { peca.src = pastaDir + "t-" + baseArte + "-0.webp"; };
           peca.className = "massa-peca";
           peca.dataset.id = item.id;
           peca.style.left = `calc(50% + ${px.toFixed(1)}px - 14px)`;
@@ -1436,11 +1436,11 @@
     const qtd = qtdPorcoes || 1;
     const pecas = [].slice.call(massaConteudo.querySelectorAll('.massa-peca[data-id="' + item.id + '"]'));
     const alvo = pecas.slice(-(qtd * 3));
-    alvo.forEach(function(p, idx) {
+    alvo.forEach(function (p, idx) {
       p.animate([
         { opacity: 1, transform: p.style.transform },
         { opacity: 0, transform: p.style.transform + " translateY(-14px) scale(0.3)" }
-      ], { duration: 220, delay: idx * 20, easing: "ease-in" }).onfinish = function() { p.remove(); };
+      ], { duration: 220, delay: idx * 20, easing: "ease-in" }).onfinish = function () { p.remove(); };
     });
   }
 
@@ -1463,23 +1463,23 @@
       + '<span class="cuba-nome">' + item.nome + '</span>'
       + '<span class="cuba-preco">' + precoTxt + '</span>';
     let seguro, x0 = 0;
-    b.addEventListener("pointerdown", function(e) {
+    b.addEventListener("pointerdown", function (e) {
       if (e.target.closest(".cuba-menos")) return;
       x0 = e.clientX;
       b.classList.add("apertado");
-      seguro = setTimeout(function() {
+      seguro = setTimeout(function () {
         seguro = null;
         b.classList.remove("apertado");
         b.dataset.segurou = "1";
         aoTirar(item, b, true);
       }, 460);
     });
-    const solta = function() { b.classList.remove("apertado"); clearTimeout(seguro); };
+    const solta = function () { b.classList.remove("apertado"); clearTimeout(seguro); };
     b.addEventListener("pointerup", solta);
     b.addEventListener("pointerleave", solta);
     b.addEventListener("pointercancel", solta);
-    b.addEventListener("pointermove", function(e) { if (Math.abs(e.clientX - x0) > 8) solta(); });
-    b.addEventListener("click", function(e) {
+    b.addEventListener("pointermove", function (e) { if (Math.abs(e.clientX - x0) > 8) solta(); });
+    b.addEventListener("click", function (e) {
       if (b.dataset.segurou) { delete b.dataset.segurou; return; }
       const menos = e.target.closest(".cuba-menos") || e.target.closest(".cuba-badge");
       if (menos) {
@@ -1506,7 +1506,7 @@
   const ingMassaGrade = $("#ingMassa");
   if (ingMassaGrade) {
     ingMassaGrade.innerHTML = "";
-    MASSA.ingredientes.forEach(function(item) {
+    MASSA.ingredientes.forEach(function (item) {
       cubaMassa(item, ingMassaGrade,
         function aoTocar() {
           if (massaEtapa !== 1) return;
@@ -1535,7 +1535,7 @@
           soltarPedido("massa");
           tirarDaFrigideira(it, removidas);
           vibrar(16);
-          if (!MASSA.ingredientes.some(function(i) { return (estado.massaPorcoes[i.id] || 0) > 0; })) {
+          if (!MASSA.ingredientes.some(function (i) { return (estado.massaPorcoes[i.id] || 0) > 0; })) {
             dizer("Toque nas cubas para jogar na frigideira", null, null, "massa");
           } else {
             dizer(novoN > 0 ? it.nome + " \xd7" + novoN : "Tirou " + it.nome.toLowerCase(), null, null, "massa");
@@ -1543,18 +1543,18 @@
         }
       );
     });
-    $$(".cuba-btn", ingMassaGrade).forEach(function(c) {
+    $$(".cuba-btn", ingMassaGrade).forEach(function (c) {
       c.style.display = (c.dataset.cat === "carnes") ? "flex" : "none";
     });
   }
 
   /* ---- Abas de categoria (Etapa 1) ---- */
   const massaTabs = $$(".massa__tab");
-  massaTabs.forEach(function(tab) {
-    tab.addEventListener("click", function() {
-      massaTabs.forEach(function(t) { t.classList.toggle("massa__tab--active", t === tab); });
+  massaTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      massaTabs.forEach(function (t) { t.classList.toggle("massa__tab--active", t === tab); });
       const cat = tab.dataset.cat;
-      $$(".cuba-btn", ingMassaGrade).forEach(function(c) {
+      $$(".cuba-btn", ingMassaGrade).forEach(function (c) {
         c.style.display = (c.dataset.cat === cat) ? "flex" : "none";
       });
       dizer("Escolha os itens de " + tab.textContent.toLowerCase(), null, null, "massa");
@@ -1564,7 +1564,7 @@
   /* ---- Build Etapa 2: seleção de molho ---- */
   const ingMolhoGrade = $("#ingMolho");
   if (ingMolhoGrade) {
-    MOLHOS_MASSA.forEach(function(molho) {
+    MOLHOS_MASSA.forEach(function (molho) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "cuba-btn";
@@ -1572,9 +1572,9 @@
       b.innerHTML = '<div class="cuba-art"><img class="cuba-item-img" src="' + IMG_MASSA + molho.img + '" alt="' + molho.nome + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
         + '<span class="cuba-nome">' + molho.nome + '</span>'
         + '<span class="cuba-preco">incluso</span>';
-      b.addEventListener("click", function() {
+      b.addEventListener("click", function () {
         if (massaMolhoSel && massaMolhoSel.id === molho.id) return;
-        $$(".cuba-btn", ingMolhoGrade).forEach(function(x) { x.classList.remove("cuba-selecionado"); });
+        $$(".cuba-btn", ingMolhoGrade).forEach(function (x) { x.classList.remove("cuba-selecionado"); });
         b.classList.add("cuba-selecionado");
         massaMolhoSel = molho;
         estado.massaMolho = molho.id;
@@ -1589,7 +1589,7 @@
   /* ---- Build Etapa 3: tipo de massa ---- */
   const ingTipoGrade = $("#ingTipoMassa");
   if (ingTipoGrade) {
-    TIPOS_MASSA.forEach(function(tipo) {
+    TIPOS_MASSA.forEach(function (tipo) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "cuba-btn";
@@ -1597,8 +1597,8 @@
       b.innerHTML = '<div class="cuba-art"><img class="cuba-item-img" src="' + IMG_MASSA + tipo.img + '" alt="' + tipo.nome + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
         + '<span class="cuba-nome">' + tipo.nome + '</span>'
         + '<span class="cuba-preco">incluso</span>';
-      b.addEventListener("click", function() {
-        $$(".cuba-btn", ingTipoGrade).forEach(function(x) { x.classList.remove("cuba-selecionado"); });
+      b.addEventListener("click", function () {
+        $$(".cuba-btn", ingTipoGrade).forEach(function (x) { x.classList.remove("cuba-selecionado"); });
         b.classList.add("cuba-selecionado");
         massaTipoSel = tipo;
         estado.massaRecipiente = tipo.id;
@@ -1613,7 +1613,7 @@
   /* ---- Build Etapa 4: finalizações ---- */
   const ingFinalGrade = $("#ingFinal");
   if (ingFinalGrade) {
-    FINALIZACOES.forEach(function(item) {
+    FINALIZACOES.forEach(function (item) {
       const pastaDir = item.pasta === "pizza" ? IMG_PIZZA : IMG_MASSA;
       const baseArte = item.arte || item.id.replace("-fin", "");
       const imgSrc = item.img ? (IMG_MASSA + item.img) : (pastaDir + "t-" + baseArte + "-0.webp");
@@ -1625,7 +1625,7 @@
         + '<span class="cuba-nome">' + item.nome + '</span>'
         + '<span class="cuba-preco">+ ' + reais(item.preco) + '</span>';
       let nFin = 0;
-      b.addEventListener("click", function() {
+      b.addEventListener("click", function () {
         if (nFin >= 2) {
           b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 250 });
           return;
@@ -1651,7 +1651,7 @@
   /* ---- Botão principal — navegação entre etapas ---- */
   UI.pizza.pedir.addEventListener("click", assar);
   UI.lanche.pedir.addEventListener("click", chapear);
-  UI.massa.pedir.addEventListener("click", function() {
+  UI.massa.pedir.addEventListener("click", function () {
     const ui = UI.massa;
     if (massaEtapa === 1) {
       atualizarStepper(2);
@@ -1676,7 +1676,7 @@
       animarFinal();
       dizer("Adicione os toques finais", null, null, "massa");
     } else {
-      const temIng = MASSA.ingredientes.some(function(i) { return (estado.massaPorcoes[i.id] || 0) > 0; });
+      const temIng = MASSA.ingredientes.some(function (i) { return (estado.massaPorcoes[i.id] || 0) > 0; });
       if (!temIng) {
         ui.pedir.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], { duration: 300 });
         dizer("Volte e adicione ao menos um ingrediente", null, null, "massa");
@@ -1684,14 +1684,14 @@
         return;
       }
       animarFinal();
-      setTimeout(function() { entregar("massa"); }, 800);
+      setTimeout(function () { entregar("massa"); }, 800);
     }
   });
 
   medirQueijo();
   medir();
   empilhar();
-  addEventListener("resize", function() { medirQueijo(); empilhar(); });
+  addEventListener("resize", function () { medirQueijo(); empilhar(); });
   precificar("pizza");
   precificar("lanche");
   precificar("massa");
@@ -1702,14 +1702,14 @@
   /* ================================================================
      CARROSSEL — navegação por abas e scroll-snap
      ================================================================ */
-  (function() {
-    var demos  = document.getElementById("demos");
-    var nav    = document.getElementById("carrosselNav");
+  (function () {
+    var demos = document.getElementById("demos");
+    var nav = document.getElementById("carrosselNav");
     var dotsEl = document.getElementById("carrosselDots");
     if (!demos || !nav) return;
 
     /* Ordem deve bater exatamente com a ordem no HTML e nos botões */
-    var IDS  = ["slidePizza", "slideMassa", "slideLanche"];
+    var IDS = ["slidePizza", "slideMassa", "slideLanche"];
     var tabs = Array.prototype.slice.call(nav.querySelectorAll(".carrossel-tab"));
     var dots = dotsEl ? Array.prototype.slice.call(dotsEl.querySelectorAll(".carrossel-dot")) : [];
 
@@ -1721,18 +1721,18 @@
       if (idx === idxAtivo && viaScroll) return; /* nada mudou */
       idxAtivo = idx;
 
-      tabs.forEach(function(t, i) {
+      tabs.forEach(function (t, i) {
         var on = i === idx;
         t.classList.toggle("carrossel-tab--active", on);
         t.setAttribute("aria-selected", on ? "true" : "false");
       });
-      dots.forEach(function(d, i) {
+      dots.forEach(function (d, i) {
         d.classList.toggle("carrossel-dot--active", i === idx);
       });
 
       /* Re-mede elementos que dependem do tamanho visível */
-      if (idx === 0) { try { medirQueijo(); } catch(e){} }
-      if (idx === 2) { try { medir(); empilhar(); } catch(e){} }
+      if (idx === 0) { try { medirQueijo(); } catch (e) { } }
+      if (idx === 2) { try { medir(); empilhar(); } catch (e) { } }
     }
 
     /* ---- Scroll programático para o slide de índice i ---- */
@@ -1743,12 +1743,12 @@
       demos.scrollTo({ left: idx * largura, behavior: "smooth" });
       /* Libera a flag após a animação terminar (~500 ms) */
       clearTimeout(demos._scrollTimer);
-      demos._scrollTimer = setTimeout(function() { scrollando = false; }, 600);
+      demos._scrollTimer = setTimeout(function () { scrollando = false; }, 600);
     }
 
     /* ---- Clique nas abas ---- */
-    tabs.forEach(function(tab, i) {
-      tab.addEventListener("click", function() {
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener("click", function () {
         ativar(i, false);
         irPara(i);
       });
@@ -1756,9 +1756,9 @@
 
     /* ---- Swipe / scroll manual: detecta o slide mais próximo ---- */
     var debounce;
-    demos.addEventListener("scroll", function() {
+    demos.addEventListener("scroll", function () {
       clearTimeout(debounce);
-      debounce = setTimeout(function() {
+      debounce = setTimeout(function () {
         if (scrollando) return; /* ignora scroll disparado pelo próprio irPara */
         var largura = demos.clientWidth;
         if (!largura) return;
