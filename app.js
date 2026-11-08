@@ -183,20 +183,20 @@
     base: 29.0,
     ingredientes: [
       /* Carnes */
-      { id: "bacon", nome: "Bacon", preco: 4, cat: "carnes", arte: "bacon", pasta: "massas", max: 2 },
-      { id: "calabresa", nome: "Calabresa", preco: 4, cat: "carnes", arte: "calabresa", pasta: "massas", max: 2 },
-      { id: "presunto", nome: "Presunto", preco: 3, cat: "carnes", arte: "presunto", pasta: "massas", max: 2 },
-      { id: "salsicha", nome: "Salsicha", preco: 3, cat: "carnes", arte: "salsicha", pasta: "massas", max: 2 },
-      { id: "frango", nome: "Frango", preco: 4, cat: "carnes", arte: "frango", pasta: "massas", max: 2 },
-      { id: "lombo", nome: "Lombo defumado", preco: 6, cat: "carnes", arte: "lombo", pasta: "massas", max: 2 },
-      { id: "costela", nome: "Costela desfiada", preco: 7, cat: "carnes", arte: "costela", pasta: "massas", max: 2 },
+      { id: "bacon", nome: "Bacon", preco: 4, cat: "carnes", arte: "bacon", pasta: "massas", max: 2, muitos: true },
+      { id: "calabresa", nome: "Calabresa", preco: 4, cat: "carnes", arte: "calabresa", pasta: "massas", max: 2, muitos: true },
+      { id: "presunto", nome: "Presunto", preco: 3, cat: "carnes", arte: "presunto", pasta: "massas", max: 2, muitos: true },
+      { id: "salsicha", nome: "Salsicha", preco: 3, cat: "carnes", arte: "salsicha", pasta: "massas", max: 2, muitos: true },
+      { id: "frango", nome: "Frango", preco: 4, cat: "carnes", arte: "frango", pasta: "massas", max: 2, muitos: true },
+      { id: "lombo", nome: "Lombo defumado", preco: 6, cat: "carnes", arte: "lombo", pasta: "massas", max: 2, muitos: true },
+      { id: "costela", nome: "Costela desfiada", preco: 7, cat: "carnes", arte: "costela", pasta: "massas", max: 2, muitos: true },
       /* Legumes */
       { id: "pimentoes", nome: "Pimentões", preco: 2, cat: "legumes", arte: "pimentao", pasta: "pizza", max: 2 },
       { id: "brocolis", nome: "Brócolis", preco: 3, cat: "legumes", arte: "brocolis", pasta: "massas", max: 2 },
       { id: "tomate", nome: "Tomate", preco: 2, cat: "legumes", arte: "tomate", pasta: "pizza", max: 2 },
       { id: "champignon", nome: "Champignon", preco: 3, cat: "legumes", arte: "cogumelo", pasta: "pizza", max: 2 },
-      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "ervilha", pasta: "pizza", max: 2 },
-      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "milho", pasta: "pizza", max: 2 },
+      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "grao-ervilha", pasta: "massas", max: 2, graos: true },
+      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "grao-milho", pasta: "massas", max: 2, graos: true },
       { id: "azeitona", nome: "Azeitona", preco: 2, cat: "legumes", arte: "azeitona", pasta: "pizza", max: 2 },
       { id: "palmito", nome: "Palmito", preco: 3, cat: "legumes", arte: "palmito", pasta: "massas", max: 2 },
       { id: "passas", nome: "Uvas passas", preco: 2, cat: "legumes", arte: "passas", pasta: "massas", max: 2 },
@@ -1162,10 +1162,20 @@
   const massaEl = $("#massa");
   const massaMolhoImg = $("#massaMolhoImg");
   const massaTipoImg = $("#massaTipoImg");
+  const massaQueijoCanvas = $("#massaQueijoCanvas");
+  const massaQueijoWrapper = $("#massaQueijoWrapper");
+  const massaPanela = $("#massaPanela");
+  const massaPratoFinal = $("#massaPratoFinal");
+  const massaPratoFinalImg = $("#massaPratoFinalImg");
 
   let massaEtapa = 1;
   let massaMolhoSel = null;
   let massaTipoSel = null;
+
+  /* Trilhas de queijo depositado na frigideira de massa */
+  const massaQueijoTrilhas = [];
+  const massaQueijoCtx = massaQueijoCanvas.getContext("2d");
+  let massaQueijoTamanho = 0;
 
   const MOLHOS_MASSA = [
     { id: "bolonhesa", nome: "Bolonhesa", img: "molho-bolonhesa.webp", tex: "tex-bolonhesa.webp" },
@@ -1189,6 +1199,7 @@
 
   /* ---- Atualiza o stepper visual ---- */
   function atualizarStepper(etapa) {
+    if (etapa < 4) desfazerPratoFinal();
     massaEtapa = etapa;
     $$("#massaStepper .massa__step").forEach(el => {
       const n = Number(el.dataset.etapa);
@@ -1229,11 +1240,16 @@
     const larg = 120;
     const CONCHA_AX = 0.25, CONCHA_AY = 0.85;
     const t0 = performance.now(), D = 700;
+    let anguloCircular = 0;
     const ir = () => {
       const t = Math.min(1, (performance.now() - t0) / D), e = suave(t);
       const x = curva(ini.x, ctl.x, cx, e), y = curva(ini.y, ctl.y, cy, e);
       concha.style.width = larg + "px";
-      concha.style.transform = `translate(${(x - CONCHA_AX * larg).toFixed(1)}px,${(y - CONCHA_AY * larg * 0.6).toFixed(1)}px) rotate(${-30 + e * 50}deg)`;
+      /* Movimento circular da concha antes de derramar o molho */
+      anguloCircular = e * Math.PI * 2;
+      const offsetX = Math.cos(anguloCircular) * 15;
+      const offsetY = Math.sin(anguloCircular) * 10;
+      concha.style.transform = `translate(${(x - CONCHA_AX * larg + offsetX).toFixed(1)}px,${(y - CONCHA_AY * larg * 0.6 + offsetY).toFixed(1)}px) rotate(${-30 + e * 50}deg)`;
       if (t < 1) return requestAnimationFrame(ir);
       massaMolhoImg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, easing: "ease-out", fill: "forwards" });
       setTimeout(() => borbolhar(massaConteudo, 8), 300);
@@ -1311,33 +1327,170 @@
     }, 400);
   }
 
-  /* ---- Bisnaga de queijo na finalização ---- */
+  /* ---- Desenha o queijo depositado na frigideira de massa (centralizado no canvas) ---- */
+  function desenharQueijoMassa() {
+    const cx = massaQueijoCanvas.width / 2;
+    const cy = massaQueijoCanvas.height / 2;
+    const raio = Math.min(massaQueijoCanvas.width, massaQueijoCanvas.height) / 2 * 0.85;
+    const x = massaQueijoCtx;
+    x.clearRect(0, 0, massaQueijoCanvas.width, massaQueijoCanvas.height);
+    x.lineCap = x.lineJoin = "round";
+    const w = massaQueijoCanvas.width * 0.036;
+    massaQueijoTrilhas.forEach(tr => {
+      // sombra
+      x.beginPath();
+      for (let i = 0; i <= tr.ate && i < tr.pts.length; i++) {
+        const [u, v] = tr.pts[i], px = cx + u * raio + w * 0.12, py = cy + v * raio + w * 0.28;
+        i ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.strokeStyle = tr.cor.sombra;
+      x.lineWidth = w * 1.05;
+      x.stroke();
+      // borda
+      x.beginPath();
+      for (let i = 0; i <= tr.ate && i < tr.pts.length; i++) {
+        const [u, v] = tr.pts[i], px = cx + u * raio, py = cy + v * raio;
+        i ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.strokeStyle = tr.cor.borda;
+      x.lineWidth = w;
+      x.stroke();
+      // corpo
+      x.beginPath();
+      for (let i = 0; i <= tr.ate && i < tr.pts.length; i++) {
+        const [u, v] = tr.pts[i], px = cx + u * raio - w * 0.04, py = cy + v * raio - w * 0.06;
+        i ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.strokeStyle = tr.cor.corpo;
+      x.lineWidth = w * 0.78;
+      x.stroke();
+      // brilho
+      x.beginPath();
+      for (let i = 0; i <= tr.ate && i < tr.pts.length; i++) {
+        const [u, v] = tr.pts[i], px = cx + u * raio - w * 0.16, py = cy + v * raio - w * 0.2;
+        i ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.strokeStyle = tr.cor.brilho;
+      x.lineWidth = w * 0.22;
+      x.stroke();
+    });
+  }
+
+  /* ---- Posiciona o container do queijo exatamente sobre a frigideira ---- */
+  function posicionarQueijoWrapper() {
+    if (!massaQueijoWrapper || !massaPanela) return;
+    const panelaCx = massaPanela.offsetLeft + massaPanela.offsetWidth / 2;
+    const panelaCy = massaPanela.offsetTop + massaPanela.offsetHeight / 2;
+    const tam = Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) * 0.85;
+    massaQueijoWrapper.style.width = tam + "px";
+    massaQueijoWrapper.style.height = tam + "px";
+    massaQueijoWrapper.style.left = (panelaCx - tam / 2) + "px";
+    massaQueijoWrapper.style.top = (panelaCy - tam / 1.45) + "px";
+  }
+  /* ---- Bisnaga de queijo na finalização — espiral igual ao da pizza ---- */
   function bisnagarFinal(item, pronto) {
     if (calmo || !massaEl) { pronto && pronto(); return; }
     const r = massaEl.getBoundingClientRect();
     const cx = r.left + r.width * 0.5;
-    const cy = r.top + r.height * 0.42;
+    const cy = r.top + r.height * 0.5;
+
+    /* Mapeia ids de finalização (com -fin) para nomes base das imagens */
+    const baseId = item.id === "catupiry-fin" ? "catupiry" : (item.id === "cheddar-fin" ? "cheddar" : item.id);
+
     const srcMap = {
-      "catupiry-fin": IMG_PIZZA + "bisnaga-catupiry.webp",
-      "cheddar-fin": IMG_PIZZA + "bisnaga-cheddar.webp"
+      "catupiry": IMG_MASSA + "bisnaga-catupiry.webp",
+      "cheddar": IMG_MASSA + "bisnaga-cheddar.webp"
     };
-    const bis = imgFixa(srcMap[item.id] || IMG_PIZZA + "bisnaga-catupiry.webp", "ferramenta");
-    const larg = 100;
-    const AX = 0.0058, AY = 0.98, Hratio = 0.88;
-    const ini = { x: r.right + 50, y: r.top - 40 };
-    const ctl = { x: (ini.x + cx) / 2, y: ini.y - 60 };
-    const t0 = performance.now(), D = 580;
+    const bis = imgFixa(srcMap[baseId] || IMG_MASSA + "bisnaga-catupiry.webp", "ferramenta");
+
+    /* Parâmetros idênticos ao da pizza */
+    const PONTA = { "catupiry": { x: 0.0058, y: 0.9783, h: 0.8865 }, "cheddar": { x: 0.0154, y: 0.968, h: 0.8404 } };
+    const ponta = PONTA[baseId] || PONTA.catupiry;
+
+    const CORES = {
+      catupiry: { sombra: "rgba(60,35,20,.28)", borda: "#e7dfcf", corpo: "#f7f2e8", brilho: "rgba(255,255,255,.95)" },
+      cheddar: { sombra: "rgba(90,40,10,.3)", borda: "#d9822a", corpo: "#f2a640", brilho: "rgba(255,226,160,.95)" }
+    };
+
+    const larg = r.width * 0.62;          // 62% da largura da frigideira (igual ao da pizza)
+    bis.style.width = larg + "px";
+    const alt = larg * ponta.h;
+
+    /* Ajusta o canvas ao tamanho da frigideira e posiciona o wrapper sobre ela */
+    const tam = Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) * 0.85;
+    massaQueijoCanvas.width = tam;
+    massaQueijoCanvas.height = tam;
+    posicionarQueijoWrapper();
+    // Redesenha todas as trilhas existentes após redimensionar o canvas
+    if (massaQueijoTrilhas.length > 0) {
+      desenharQueijoMassa();
+    }
+
+    const giro0 = Math.random() * Math.PI * 2;
+    const meio = baseId === "cheddar" ? 0.045 : 0;
+    const r0 = 0.95 - meio, r1 = 0.05 + meio, voltas = 3.5;
+    const N = 440;
+
+    /* Ponto na espiral: coordenadas normalizadas -1 a 1 */
+    const ponto = s => {
+      const a = giro0 + s * Math.PI * 2 * voltas;
+      const raio = r0 - (r0 - r1) * s + 0.012 * Math.sin(a * 7);
+      return [Math.cos(a) * raio, Math.sin(a) * raio];
+    };
+
+    /* Centro e raio baseados na imagem da frigideira (offsetLeft/offsetTop relativos ao #massa) */
+    const panelaCx = massaPanela ? massaPanela.offsetLeft + massaPanela.offsetWidth / 2 : r.width / 2;
+    const panelaCy = massaPanela ? massaPanela.offsetTop + massaPanela.offsetHeight / 2 : r.height / 2;
+    const panelaRaio = massaPanela ? Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) / 2 * 0.85 : Math.min(r.width, r.height) / 2 * 0.85;
+
+    /* Converte coordenadas normalizadas para pixels dentro do canvas */
+    const local = (u, v) => [panelaCx + u * panelaRaio, panelaCy + v * panelaRaio];
+
+    const posiciona = (u, v, extra = "") => {
+      const [px, py] = local(u, v);
+      // Converte coordenadas do container .massa para coordenadas da página (bisnaga está no document.body)
+      const posX = px + r.left;
+      const posY = py + r.top;
+      bis.style.transform = `translate(${posX - ponta.x * larg}px, ${posY - ponta.y * alt}px) ${extra}`;
+    };
+
+    /* Posiciona no ponto inicial (borda externa da espiral) */
+    const [u0, v0] = ponto(0);
+    posiciona(u0, v0);
+
+    /* Animação de entrada da bisnaga (igual ao da pizza) */
+    bis.animate([{ opacity: 0, translate: "60px -80px" }, { opacity: 1, translate: "0 0" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+
+    const t0 = performance.now() + 240;
+    const DUR = 1700;
+    let feito = 0;
+    const trilhaAtual = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0, cor: CORES[baseId] };
+    massaQueijoTrilhas.push(trilhaAtual);
+
     const ir = () => {
-      const t = Math.min(1, (performance.now() - t0) / D), e = suave(t);
-      const x = curva(ini.x, ctl.x, cx, e), y = curva(ini.y, ctl.y, cy, e);
-      bis.style.width = larg + "px";
-      bis.style.transform = `translate(${(x - AX * larg).toFixed(1)}px,${(y - AY * larg * Hratio).toFixed(1)}px) rotate(${-25 + e * 35}deg)`;
-      if (t < 1) return requestAnimationFrame(ir);
-      borbolhar(massaConteudo, 5);
-      bis.animate([
-        { opacity: 1 },
-        { transform: bis.style.transform + " translate(60px,-80px) rotate(-20deg)", opacity: 0 }
-      ], { duration: 320, easing: "ease-in", fill: "forwards" }).onfinish = () => { bis.remove(); pronto && pronto(); };
+      const e = Math.min(1, Math.max(0, (performance.now() - t0) / DUR));
+      const [u, v] = ponto(e);
+      posiciona(u, v, `rotate(${Math.sin(e * 40) * 2}deg)`);
+
+      // Vai preenchendo a trilha à medida que a bisnaga se move
+      const ate = Math.floor(N * e);
+      if (ate > feito) {
+        trilhaAtual.ate = ate;
+        desenharQueijoMassa();
+        feito = ate;
+      }
+
+      if (e < 1) {
+        requestAnimationFrame(ir);
+      } else {
+        trilhaAtual.ate = N;
+        desenharQueijoMassa();
+        borbolhar(massaConteudo, 5);
+        bis.animate([
+          { opacity: 1 },
+          { transform: bis.style.transform + " translate(60px,-80px) rotate(-20deg)", opacity: 0 }
+        ], { duration: 320, easing: "ease-in", fill: "forwards" }).onfinish = () => { bis.remove(); pronto && pronto(); };
+      }
     };
     requestAnimationFrame(ir);
   }
@@ -1352,6 +1505,134 @@
     }
     vibrar([6, 60, 6, 60, 6]);
   }
+  /* ---- Mostra o prato final — ingredientes dentro do prato branco ----
+     Em vez de clonar os elementos (que carregavam CSS da frigideira, como
+     top/width com !important do carrossel), a cena do prato é reconstruída
+     com elementos novos, usando só px relativos ao centro do prato. */
+  const PRATO_MAX = 170;   /* diâmetro máximo do prato (px) */
+  const PRATO_AREA = 0.66; /* fração do prato onde fica a comida (o "poço") */
+  let pratoOcultos = [];   /* elementos escondidos ao montar o prato (para desfazer) */
+
+  function mostrarPratoFinal() {
+    if (massaPratoFinal.dataset.mostrado === "1") return;
+    massaPratoFinal.dataset.mostrado = "1";
+
+    /* 1) MEDIR tudo ANTES de esconder a frigideira (hidden zera as medidas) */
+    const rBox = massaEl.getBoundingClientRect();
+    const esc = rBox.width / (massaEl.offsetWidth || rBox.width) || 1;
+    const rCont = massaConteudo.getBoundingClientRect();
+    const cx = (rCont.left + rCont.width / 2 - rBox.left) / esc; /* centro da frigideira dentro de #massa */
+    const cy = (rCont.top + rCont.height / 2 - rBox.top) / esc;
+    const cw = massaConteudo.offsetWidth || 128;
+    const ch = massaConteudo.offsetHeight || 128;
+    const D = Math.round(Math.min(PRATO_MAX, massaEl.offsetWidth * 0.86));
+    const k = (D * PRATO_AREA) / cw; /* fator de escala frigideira → prato */
+
+    const dados = {
+      pecas: [].slice.call(massaConteudo.querySelectorAll(".massa-peca")).map(function (p) {
+        return {
+          src: p.src, tempero: p.classList.contains("tempero"),
+          w: p.offsetWidth, h: p.offsetHeight,
+          dx: p.offsetLeft + p.offsetWidth / 2 - cw / 2,
+          dy: p.offsetTop + p.offsetHeight / 2 - ch / 2,
+          transform: p.style.transform
+        };
+      }),
+      molho: (massaMolhoImg && !massaMolhoImg.hidden) ? massaMolhoImg.src : null,
+      tipo: (massaTipoImg && !massaTipoImg.hidden) ? massaTipoImg.src : null,
+      queijo: null
+    };
+    const cOrig = massaQueijoWrapper && massaQueijoWrapper.querySelector("canvas");
+    if (cOrig && !massaQueijoWrapper.hidden && massaQueijoTrilhas.length > 0) {
+      const rq = massaQueijoWrapper.getBoundingClientRect();
+      dados.queijo = {
+        canvas: cOrig, tam: massaQueijoWrapper.offsetWidth,
+        dx: ((rq.left + rq.width / 2) - (rCont.left + rCont.width / 2)) / esc,
+        dy: ((rq.top + rq.height / 2) - (rCont.top + rCont.height / 2)) / esc
+      };
+    }
+
+    /* 2) Prato: centralizado exatamente onde estava a frigideira.
+          Posição por left/top + margin negativa (sem translate), assim a
+          animação de scale não desloca o prato. */
+    massaPratoFinalImg.src = IMG_MASSA + "pote.webp";
+    massaPratoFinal.style.width = D + "px";
+    massaPratoFinal.style.height = D + "px";
+    massaPratoFinal.style.left = cx + "px";
+    massaPratoFinal.style.top = cy + "px";
+    massaPratoFinal.style.margin = (-D / 2) + "px 0 0 " + (-D / 2) + "px";
+    massaPratoFinal.style.transform = "none";
+
+    /* 3) Cena com a comida dentro do prato */
+    [].slice.call(massaPratoFinal.querySelectorAll(".prato-cena")).forEach(function (n) { n.remove(); });
+    const cena = document.createElement("div");
+    cena.className = "prato-cena";
+    function pos(el, dx, dy, w, h) {
+      el.style.width = w + "px";
+      el.style.height = h + "px";
+      el.style.left = (D / 2 + dx * k - w / 2) + "px";
+      el.style.top = (D / 2 + dy * k - h / 2) + "px";
+      return el;
+    }
+    function novaImg(src, cls, z) {
+      const im = document.createElement("img");
+      im.src = src; im.alt = ""; im.className = cls; im.style.zIndex = z;
+      cena.appendChild(im);
+      return im;
+    }
+    if (dados.molho) pos(novaImg(dados.molho, "prato-molho", 2), 0, 0, cw * k, ch * k);
+    if (dados.tipo) pos(novaImg(dados.tipo, "prato-tipo", 3), 0, 0, cw * 0.97 * k, ch * 0.97 * k);
+    if (dados.queijo) {
+      const q = dados.queijo, cv = document.createElement("canvas");
+      cv.width = q.canvas.width; cv.height = q.canvas.height;
+      cv.getContext("2d").drawImage(q.canvas, 0, 0);
+      cv.className = "prato-queijo"; cv.style.zIndex = 4;
+      cena.appendChild(pos(cv, q.dx, q.dy, q.tam * k, q.tam * k));
+    }
+    dados.pecas.forEach(function (p) {
+      const im = novaImg(p.src, "prato-ing" + (p.tempero ? " tempero" : ""), 5);
+      pos(im, p.dx, p.dy, Math.max(3, p.w * k), Math.max(3, p.h * k));
+      if (p.transform) im.style.transform = p.transform; /* mantém a rotação original */
+    });
+    massaPratoFinal.appendChild(cena);
+
+    /* 4) Esconde TUDO que era da frigideira (antes só panela e conteúdo eram
+          escondidos; molho, massa e queijo ficavam visíveis = pratos duplicados) */
+    pratoOcultos = [massaPanela, massaConteudo, massaMolhoImg, massaTipoImg, massaQueijoWrapper]
+      .filter(function (el) { return el && !el.hidden; });
+    pratoOcultos.forEach(function (el) { el.hidden = true; });
+
+    /* 5) Entrada animada (só scale/opacity) */
+    massaPratoFinal.hidden = false;
+    if (calmo) {
+      massaPratoFinal.style.opacity = "1";
+    } else {
+      massaPratoFinal.style.opacity = "0";
+      const anim = massaPratoFinal.animate([
+        { transform: "scale(0.6)", opacity: 0 },
+        { transform: "scale(1)", opacity: 1 }
+      ], { duration: 600, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" });
+      anim.onfinish = function () {
+        massaPratoFinal.style.opacity = "1";
+        anim.cancel();
+      };
+      [].slice.call(cena.children).forEach(function (el, i) {
+        el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 250 + Math.min(i, 20) * 12, easing: "ease-out", fill: "backwards" });
+      });
+    }
+    vibrar([10, 50, 10]);
+  }
+
+  /* Volta da etapa 4: remove o prato e restaura a frigideira */
+  function desfazerPratoFinal() {
+    if (massaPratoFinal.dataset.mostrado !== "1") return;
+    massaPratoFinal.dataset.mostrado = "0";
+    massaPratoFinal.hidden = true;
+    [].slice.call(massaPratoFinal.querySelectorAll(".prato-cena")).forEach(function (n) { n.remove(); });
+    pratoOcultos.forEach(function (el) { el.hidden = false; });
+    pratoOcultos = [];
+  }
+
 
   /* ---- jogarNaFrigideira — lança pedaços do ingrediente na frigideira ---- */
   function jogarNaFrigideira(item, btn) {
@@ -1368,8 +1649,10 @@
     const angBase = (Math.random() + (porcaoAtual - 1) * 0.6180339887) % 1;
     const LIM = 0.66;
     const tremido = LIM * 0.09;
-    for (let k = 0; k < 3; k++) {
-      const r = LIM * Math.sqrt((k + 0.5) / 3);
+    /* Temperos/grãos lançam 10 partículas pequenas, carnes lançam 9 peças médias, outros 3 pedaços grandes */
+    const qtdParticulas = item.cat === "temperos" || item.graos ? 10 : item.muitos ? 9 : 3;
+    for (let k = 0; k < qtdParticulas; k++) {
+      const r = LIM * Math.sqrt((k + 0.5) / qtdParticulas);
       const a = 2 * Math.PI * ((k * 0.6180339887 + angBase) % 1);
       const u = Math.cos(a) * r + (Math.random() - 0.5) * 2 * tremido;
       const v = Math.sin(a) * r + (Math.random() - 0.5) * 2 * tremido;
@@ -1384,12 +1667,14 @@
         ? (item.pasta === "pizza" ? IMG_PIZZA : IMG_MASSA) + item.img
         : pastaDir + "t-" + baseArte + "-" + variante + ".webp";
 
+      /* tamanho pequeno para temperos/grãos, médio para carnes, normal para os demais */
+      const tamPeca = item.cat === "temperos" || item.graos ? 5 : item.muitos ? 14 : 28;
       const vImg = document.createElement("img");
       vImg.src = imgSrc;
       vImg.onerror = function () { vImg.src = pastaDir + "t-" + baseArte + "-0.webp"; };
       vImg.className = "voo";
-      vImg.style.width = "28px";
-      vImg.style.height = "28px";
+      vImg.style.width = tamPeca + "px";
+      vImg.style.height = tamPeca + "px";
       vImg.style.zIndex = "65";
       document.body.appendChild(vImg);
 
@@ -1406,17 +1691,18 @@
         const y = curva(de.y, ctlY, alvoY, e);
         const rot = rotFinal * e;
         const esc = 0.85 + 0.3 * Math.sin(e * Math.PI);
-        vImg.style.transform = `translate(${x - 14}px, ${y - 14}px) rotate(${rot}deg) scale(${esc})`;
+        vImg.style.transform = `translate(${x - tamPeca / 2}px, ${y - tamPeca / 2}px) rotate(${rot}deg) scale(${esc})`;
         if (t < 1) requestAnimationFrame(anima);
         else {
           vImg.remove();
           const peca = document.createElement("img");
           peca.src = imgSrc;
           peca.onerror = function () { peca.src = pastaDir + "t-" + baseArte + "-0.webp"; };
-          peca.className = "massa-peca";
+          peca.className = "massa-peca" + (item.cat === "temperos" || item.graos ? " tempero" : "");
           peca.dataset.id = item.id;
-          peca.style.left = `calc(50% + ${px.toFixed(1)}px - 14px)`;
-          peca.style.top = `calc(50% + ${py.toFixed(1)}px - 14px)`;
+          const meio = tamPeca / 2;
+          peca.style.left = `calc(50% + ${px.toFixed(1)}px - ${meio.toFixed(1)}px)`;
+          peca.style.top = `calc(50% + ${py.toFixed(1)}px - ${meio.toFixed(1)}px)`;
           peca.style.transform = `rotate(${rotFinal.toFixed(0)}deg) scale(0.9)`;
           massaConteudo.appendChild(peca);
           peca.animate(
@@ -1430,18 +1716,59 @@
     }
   }
 
-  /* ---- tirarDaFrigideira — remove imagens de um ingrediente ---- */
+  /* ---- tirarDaFrigideira — remove imagens de um ingrediente com efeito de retorno ao seletor ---- */
   function tirarDaFrigideira(item, qtdPorcoes) {
     if (!massaConteudo) return;
     const qtd = qtdPorcoes || 1;
     const pecas = [].slice.call(massaConteudo.querySelectorAll('.massa-peca[data-id="' + item.id + '"]'));
-    const alvo = pecas.slice(-(qtd * 3));
+    const particulasPorPorcao = item.cat === "temperos" || item.graos ? 10 : item.muitos ? 9 : 3;
+    const alvo = pecas.slice(-(qtd * particulasPorPorcao));
+
+    /* Posição do seletor (cuba) para efeito de retorno */
+    const rCuba = item.cubaEl ? item.cubaEl.getBoundingClientRect() : null;
+    const alvoX = rCuba ? rCuba.left + rCuba.width / 2 : null;
+    const alvoY = rCuba ? rCuba.top + rCuba.height / 2 : null;
+
     alvo.forEach(function (p, idx) {
-      p.animate([
-        { opacity: 1, transform: p.style.transform },
-        { opacity: 0, transform: p.style.transform + " translateY(-14px) scale(0.3)" }
-      ], { duration: 220, delay: idx * 20, easing: "ease-in" }).onfinish = function () { p.remove(); };
+      const rPeca = p.getBoundingClientRect();
+      const deX = rPeca.left + rPeca.width / 2;
+      const deY = rPeca.top + rPeca.height / 2;
+
+      if (alvoX != null && alvoY != null) {
+        /* Cria imagem voadora temporária no body (mesmo padrão da pizza) e anima até a cuba */
+        const voo = document.createElement("img");
+        voo.src = p.src;
+        voo.className = "voo";
+        voo.style.width = rPeca.width + "px";
+        voo.style.height = rPeca.height + "px";
+        voo.style.position = "fixed";
+        voo.style.left = (deX - rPeca.width / 2) + "px";
+        voo.style.top = (deY - rPeca.height / 2) + "px";
+        voo.style.zIndex = "100";
+        voo.style.pointerEvents = "none";
+        document.body.appendChild(voo);
+
+        /* Remove a peça original imediatamente */
+        p.remove();
+
+        /* Anima a imagem voadora até o seletor */
+        voo.animate([
+          { transform: `translate(0,0) scale(1)`, opacity: 1 },
+          { transform: `translate(${(alvoX - deX) * 0.5}px, ${(alvoY - deY) * 0.5 - 40}px) scale(0.7)`, opacity: 1, offset: 0.4 },
+          { transform: `translate(${alvoX - deX}px, ${alvoY - deY}px) scale(0.18)`, opacity: 0.3 }
+        ], { duration: 420, easing: "cubic-bezier(.3,.6,.4,1)" }).finished.then(() => voo.remove());
+      } else {
+        p.animate([
+          { opacity: 1, transform: p.style.transform },
+          { opacity: 0, transform: p.style.transform + " translateY(-14px) scale(0.3)" }
+        ], { duration: 220, delay: idx * 20, easing: "ease-in" }).onfinish = function () { p.remove(); };
+      }
     });
+
+    /* Feedback visual na cuba (igual à pizza) */
+    if (item.cubaEl && alvo.length) {
+      item.cubaEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }], { duration: 280, easing: "ease-out" });
+    }
   }
 
   /* ---- cubaMassa — cria botão de cuba para ingredientes ---- */
@@ -1521,7 +1848,11 @@
           precificar("massa", item.preco);
           soltarPedido("massa");
           dizer(item.nome + " \xd7" + (n + 1), null, null, "massa");
-          jogarNaFrigideira(item, item.cubaEl);
+          if (item.id === "catupiry" || item.id === "cheddar") {
+            bisnagarFinal(item, null);
+          } else {
+            jogarNaFrigideira(item, item.cubaEl);
+          }
         },
         function aoTirar(it, btn, tudo) {
           if (massaEtapa !== 1) return;
@@ -1535,6 +1866,23 @@
           soltarPedido("massa");
           tirarDaFrigideira(it, removidas);
           vibrar(16);
+          /* Remove apenas as trilhas de queijo correspondentes ao retirado */
+          if (it.id === "catupiry" || it.id === "cheddar") {
+            const CORES = {
+              catupiry: { sombra: "rgba(60,35,20,.28)", borda: "#e7dfcf", corpo: "#f7f2e8", brilho: "rgba(255,255,255,.95)" },
+              cheddar: { sombra: "rgba(90,40,10,.3)", borda: "#d9822a", corpo: "#f2a640", brilho: "rgba(255,226,160,.95)" }
+            };
+            const cor = CORES[it.id];
+            // Remove do final (últimas adicionadas) a quantidade retirada
+            for (let r = 0; r < removidas && massaQueijoTrilhas.length > 0; r++) {
+              massaQueijoTrilhas.pop();
+            }
+            if (massaQueijoTrilhas.length > 0) {
+              desenharQueijoMassa(cor);
+            } else {
+              massaQueijoCtx.clearRect(0, 0, massaQueijoCanvas.width, massaQueijoCanvas.height);
+            }
+          }
           if (!MASSA.ingredientes.some(function (i) { return (estado.massaPorcoes[i.id] || 0) > 0; })) {
             dizer("Toque nas cubas para jogar na frigideira", null, null, "massa");
           } else {
@@ -1674,6 +2022,7 @@
       }
       atualizarStepper(4);
       animarFinal();
+      mostrarPratoFinal();
       dizer("Adicione os toques finais", null, null, "massa");
     } else {
       const temIng = MASSA.ingredientes.some(function (i) { return (estado.massaPorcoes[i.id] || 0) > 0; });
@@ -1684,6 +2033,7 @@
         return;
       }
       animarFinal();
+      mostrarPratoFinal();
       setTimeout(function () { entregar("massa"); }, 800);
     }
   });

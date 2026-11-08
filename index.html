@@ -137,6 +137,15 @@
                 <!-- camadas que aparecem nas etapas seguintes -->
                 <img class="massa__camada-molho" id="massaMolhoImg" src="" alt="" hidden>
                 <img class="massa__camada-tipo" id="massaTipoImg" src="" alt="" hidden>
+                <!-- CORREÇÃO: wrapper + canvas do queijo (o app.js procura estes IDs) -->
+                <div class="massa__queijo-wrapper" id="massaQueijoWrapper">
+                  <canvas id="massaQueijoCanvas"></canvas>
+                </div>
+                <!-- CORREÇÃO: o prato final agora fica DENTRO de #massa (antes estava em #massaEtapa4),
+                     para ser posicionado no centro da frigideira -->
+                <div class="massa__prato-pronto" id="massaPratoFinal" hidden>
+                  <img id="massaPratoFinalImg" src="" alt="Prato pronto" class="massa__prato-pronto-img">
+                </div>
               </div>
             </div>
             <p class="massa__legenda" id="massaLegenda">Seu prato aparece aqui</p>
@@ -165,10 +174,6 @@
             <div id="massaEtapa4" hidden>
               <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque para finalizar o prato</p>
               <div class="massa__cubas massa__cubas--final" id="ingFinal"></div>
-              <!-- prato pronto aparece aqui -->
-              <div class="massa__prato-pronto" id="massaPratoFinal" hidden>
-                <img id="massaPratoFinalImg" src="" alt="Prato pronto" class="massa__prato-pronto-img">
-              </div>
             </div>
           </div>
           <div class="app__rodape">
