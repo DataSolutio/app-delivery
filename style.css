@@ -2116,27 +2116,6 @@ button {
    ================================================================ */
 @media (max-width: 767px) {
 
-  /* Nav: menos padding laterais em celulares estreitos */
-  .nav {
-    width: min(1120px, calc(100% - 16px)) !important;
-    padding: 7px 8px 7px 12px !important;
-  }
-
-  /* Carrossel-nav: tabs empilhados ou mais compactos em mobile */
-  .carrossel-nav {
-    gap: 6px !important;
-    padding: 5px !important;
-  }
-
-  .carrossel-tab {
-    padding: 8px 3px 6px !important;
-    font-size: .7rem !important;
-  }
-
-  .carrossel-tab__icone {
-    font-size: 1.2rem !important;
-  }
-
   /* Palco: sem altura fixa — rola livremente */
   .demos--carrossel>.palco {
     height: auto !important;
@@ -2380,5 +2359,80 @@ button {
 
   .demos--carrossel .cuba-preco {
     font-size: .68rem !important;
+  }
+}
+
+/* ================================================================
+   AJUSTES MOBILE (toque, barra do navegador, telas pequenas)
+   ================================================================ */
+
+/* Segurar o dedo numa cuba (remover ingrediente) não pode abrir
+   menu de imagem, selecionar texto nem arrastar a figura */
+.cuba-btn {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cuba-art,
+.cuba-item-img,
+.massa__prato-pronto,
+.prato-cena>* {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 100vh no celular inclui a área da barra de endereço (conteúdo fica cortado).
+   100dvh acompanha a altura realmente visível. */
+@supports (height: 100dvh) {
+  @media (min-width: 768px) {
+    .demos--carrossel>.palco {
+      height: calc(100dvh - 155px) !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .demos--carrossel>.palco {
+      min-height: 90dvh !important;
+    }
+  }
+}
+
+/* Telas estreitas (iPhone SE, Androids pequenos: 320–380px) */
+@media (max-width: 380px) {
+  .demos--carrossel>.palco {
+    padding: 12px 6px 16px !important;
+  }
+
+  .demos--carrossel .vista,
+  .demos--carrossel #slidePizza .vista,
+  .demos--carrossel #slideLanche .vista,
+  .demos--carrossel #slideMassa .vista {
+    padding: 0 8px !important;
+  }
+
+  .demos--carrossel #slideMassa .massa__stepper {
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .demos--carrossel #slideMassa .massa__step {
+    font-size: .66rem !important;
+    padding: 5px 3px !important;
+    gap: 3px;
+  }
+
+  .demos--carrossel #slideMassa .massa__step-num {
+    width: 16px;
+    height: 16px;
+    font-size: .62rem;
+  }
+
+  .demos--carrossel #slideMassa .massa__titulo {
+    font-size: 1.25rem !important;
   }
 }

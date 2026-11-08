@@ -1513,7 +1513,7 @@
   const PRATO_AREA = 0.66; /* fração do prato onde fica a comida (o "poço") */
   let pratoOcultos = [];   /* elementos escondidos ao montar o prato (para desfazer) */
 
-  function mostrarPratoFinal() {
+  function mostrarPratoFinal(silencioso) {
     if (massaPratoFinal.dataset.mostrado === "1") return;
     massaPratoFinal.dataset.mostrado = "1";
 
@@ -1604,7 +1604,7 @@
 
     /* 5) Entrada animada (só scale/opacity) */
     massaPratoFinal.hidden = false;
-    if (calmo) {
+    if (calmo || silencioso) {
       massaPratoFinal.style.opacity = "1";
     } else {
       massaPratoFinal.style.opacity = "0";
@@ -1620,7 +1620,7 @@
         el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 250 + Math.min(i, 20) * 12, easing: "ease-out", fill: "backwards" });
       });
     }
-    vibrar([10, 50, 10]);
+    if (!silencioso) vibrar([10, 50, 10]);
   }
 
   /* Volta da etapa 4: remove o prato e restaura a frigideira */
@@ -1801,6 +1801,7 @@
         aoTirar(item, b, true);
       }, 460);
     });
+    b.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     const solta = function () { b.classList.remove("apertado"); clearTimeout(seguro); };
     b.addEventListener("pointerup", solta);
     b.addEventListener("pointerleave", solta);
@@ -2042,6 +2043,22 @@
   medir();
   empilhar();
   addEventListener("resize", function () { medirQueijo(); empilhar(); });
+  /* Celular: girar a tela ou cruzar o breakpoint de 767px muda o tamanho da
+     frigideira. Refaz o prato final (sem animação) e reposiciona o queijo. */
+  let resizeMassaTimer;
+  function reajustarMassa() {
+    clearTimeout(resizeMassaTimer);
+    resizeMassaTimer = setTimeout(function () {
+      if (massaPratoFinal.dataset.mostrado === "1") {
+        desfazerPratoFinal();
+        mostrarPratoFinal(true);
+      } else if (!massaPanela.hidden) {
+        posicionarQueijoWrapper();
+      }
+    }, 150);
+  }
+  addEventListener("resize", reajustarMassa);
+  addEventListener("orientationchange", reajustarMassa);
   precificar("pizza");
   precificar("lanche");
   precificar("massa");
