@@ -2436,3 +2436,112 @@ button {
     font-size: 1.25rem !important;
   }
 }
+
+
+/* ================================================================
+   PROPORÇÕES DA FRIGIDEIRA DE MASSAS
+   Tudo deriva de --pan (largura da frigideira). Medido nas imagens de referência:
+   molho ≈ 75% da frigideira e CENTRALIZADO no corpo dela (centro = --pan / 2).
+   Antes: molho 64% e top fixo de 22px, o que deixava o molho pequeno e ~14px
+   acima do centro (a frigideira tem o cabo, então altura/2 não é o centro).
+   ================================================================ */
+.demos--carrossel .massa {
+  --pan: 185px;
+  --molho: calc(var(--pan) * .75);
+  --tipo: calc(var(--pan) * .73);
+  width: var(--pan) !important;
+  height: calc(var(--pan) * 1.3) !important;
+}
+
+@media (max-width: 767px) {
+  .demos--carrossel .massa {
+    --pan: 200px;
+  }
+}
+
+.demos--carrossel .massa__panela {
+  width: var(--pan) !important;
+}
+
+.demos--carrossel .massa__conteudo,
+.demos--carrossel .massa__camada-molho {
+  width: var(--molho) !important;
+  height: var(--molho) !important;
+  top: calc(var(--pan) / 2 - var(--molho) / 2) !important;
+}
+
+.demos--carrossel .massa__camada-tipo {
+  width: var(--tipo) !important;
+  height: var(--tipo) !important;
+  top: calc(var(--pan) / 2 - var(--tipo) / 2) !important;
+}
+
+
+/* Molho por cima da massa no prato final: sólido no centro, esmaece nas bordas.
+   --molho-solido = até que fração do raio o molho é 100% opaco (menor = mais massa à mostra) */
+.prato-cena {
+  --molho-solido: 80%;
+  --filme-opacidade: .42;
+  --queijo-opacidade: .85;
+}
+
+.prato-molho--topo {
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 0%, #000 var(--molho-solido), transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 0%, #000 var(--molho-solido), transparent 100%);
+}
+
+/* Filme de molho sobre os ingredientes (densidade controlada por --filme-opacidade) */
+.prato-molho--filme {
+  opacity: var(--filme-opacidade);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 0%, #000 var(--molho-solido), transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 0%, #000 var(--molho-solido), transparent 100%);
+}
+
+/* Queijo (cheddar/catupiry) no prato final: levemente translúcido e sob o filme de
+   molho, para parecer misturado ao prato e não colado por cima */
+.prato-queijo {
+  opacity: var(--queijo-opacidade);
+}
+
+
+/* ================= EXTRAS DA MONTAGEM DE MASSAS ================= */
+.massa-ferr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.massa-ferr button { font: 600 .72rem var(--font-body, inherit); padding: 6px 10px; border: 1px solid #e3d6c6; border-radius: 999px; background: #fff; color: #261a14; cursor: pointer; touch-action: manipulation; }
+.massa-ferr button[aria-pressed="true"] { background: #261a14; color: #fff; }
+.massa-ferr .massa-sug { background: #f6edde; }
+.massa-ferr__rot { font-size: .72rem; color: #75675c; }
+.cuba-alerg { font-size: .55rem; color: #75675c; margin-top: 1px; }
+
+.massa-resumo { position: absolute; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 14px; background: rgba(38, 26, 20, .55); border-radius: inherit; }
+.massa-resumo__card { width: 100%; max-width: 340px; max-height: 100%; overflow-y: auto; background: #fff; border-radius: 18px; padding: 16px; color: #261a14; box-shadow: 0 12px 40px rgba(0, 0, 0, .3); }
+.massa-resumo__card h3 { font: 800 1.15rem var(--font-display, inherit); margin: 0 0 8px; }
+.massa-resumo__base { font-size: .85rem; display: flex; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.massa-resumo__card ul { list-style: none; margin: 0; padding: 0; font-size: .82rem; }
+.massa-resumo__card li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #eadfd0; }
+.massa-resumo__alerg { font-size: .72rem; color: #75675c; margin: 8px 0 0; }
+.massa-resumo__total { display: flex; justify-content: space-between; font-size: 1rem; margin: 8px 0 12px; }
+.massa-resumo__acoes { display: flex; gap: 8px; }
+.massa-resumo__acoes button { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #e3d6c6; background: #fff; font-weight: 700; cursor: pointer; }
+.massa-resumo__acoes .massa-resumo__ok { background: #261a14; color: #fff; border-color: #261a14; }
+
+.comanda__prato { display: block; width: 96px; height: 96px; margin: 8px auto; border-radius: 12px; object-fit: contain; background: #f6edde; }
+.massa-compartilhar { display: block; margin: 4px auto 12px; padding: 10px 16px; border-radius: 999px; border: 1px solid #e3d6c6; background: #fff; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+
+/* Celulares altos: o prato fica visível enquanto o cliente rola as cubas */
+@media (max-width: 767px) and (min-height: 700px) {
+  .demos--carrossel #slideMassa .massa__prato-box { position: sticky !important; top: 0; z-index: 20; }
+}
+
+
+/* Faixa "Seu prato": ingredientes escolhidos, toque para remover */
+.massa-sel { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+.massa-sel[hidden] { display: none; }
+.massa-sel__chip { position: relative; width: 44px; height: 44px; padding: 0; border: 2px solid #c8402a; border-radius: 50%; background: #fff; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.massa-sel__chip:not(:has(.massa-sel__x)) { border-color: #e3d6c6; }
+.massa-sel__chip img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; pointer-events: none; }
+.massa-sel__x { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #eadfd0; color: #261a14; font: 700 .8rem/18px sans-serif; text-align: center; }
+.massa-sel__n { position: absolute; bottom: -4px; left: -4px; min-width: 16px; height: 16px; border-radius: 8px; background: #261a14; color: #fff; font: 700 .65rem/16px sans-serif; text-align: center; padding: 0 3px; }
+.demos--carrossel #slideMassa .massa-sel { grid-column: 1; grid-row: 5; }
+@media (max-width: 767px) {
+  .demos--carrossel #slideMassa .massa-sel { grid-column: unset; grid-row: unset; }
+}

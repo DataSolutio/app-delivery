@@ -102,10 +102,11 @@
   });
   function total(app) {
     if (app === "pizza") return PIZZA.tamanhos[estado.tam].preco + PIZZA.ingredientes.reduce((s, i) => s + estado.porcoes[i.id] * i.preco, 0);
-    if (app === "massa") return MASSA.base + MASSA.ingredientes.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0);
+    if (app === "massa") return MASSA.base + MASSA.ingredientes.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0) + FINALIZACOES.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0);
     return LANCHE.base + PAES.find(p => p.id === estado.pao).preco + LANCHE.camadas.filter(c => !c.fixo).reduce((s, c) => s + (estado.lanche.get(c.id) || 0) * c.preco, 0);
   }
   function precificar(app, delta) {
+    if (app === "massa") setTimeout(function () { if (window.__atualizarSel) window.__atualizarSel(); }, 0);
     const ui = UI[app], precoEl = ui.preco;
     const alvo = total(app);
     const de = ui.mostrado == null ? alvo : ui.mostrado;
@@ -1171,6 +1172,7 @@
   let massaEtapa = 1;
   let massaMolhoSel = null;
   let massaTipoSel = null;
+  const massaHist = []; /* ingredientes adicionados na etapa 1, para "Desfazer" */
 
   /* Trilhas de queijo depositado na frigideira de massa */
   const massaQueijoTrilhas = [];
@@ -1335,7 +1337,7 @@
     const x = massaQueijoCtx;
     x.clearRect(0, 0, massaQueijoCanvas.width, massaQueijoCanvas.height);
     x.lineCap = x.lineJoin = "round";
-    const w = massaQueijoCanvas.width * 0.036;
+    const w = massaQueijoCanvas.width * 0.05;
     massaQueijoTrilhas.forEach(tr => {
       // sombra
       x.beginPath();
@@ -1377,15 +1379,27 @@
   }
 
   /* ---- Posiciona o container do queijo exatamente sobre a frigideira ---- */
+  /* O corpo da frigideira é um círculo com diâmetro = largura da imagem, colado no
+     topo (o cabo fica abaixo). Por isso o centro vertical é offsetTop + largura/2
+     (e não a altura/2, que incluía o cabo e deslocava tudo ~30px para baixo). */
+  const QUEIJO_TAM = 0.62; /* lado do canvas do queijo = 62% da frigideira (espiral ≈ 50% dela) */
+  function geometriaQueijo() {
+    const L = massaPanela.offsetWidth;
+    const tam = L * QUEIJO_TAM;
+    return {
+      cx: massaPanela.offsetLeft + L / 2,
+      cy: massaPanela.offsetTop + L / 2,
+      tam: tam,
+      raio: tam / 2 * 0.85 /* igual ao "raio" usado em desenharQueijoMassa */
+    };
+  }
   function posicionarQueijoWrapper() {
-    if (!massaQueijoWrapper || !massaPanela) return;
-    const panelaCx = massaPanela.offsetLeft + massaPanela.offsetWidth / 2;
-    const panelaCy = massaPanela.offsetTop + massaPanela.offsetHeight / 2;
-    const tam = Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) * 0.85;
-    massaQueijoWrapper.style.width = tam + "px";
-    massaQueijoWrapper.style.height = tam + "px";
-    massaQueijoWrapper.style.left = (panelaCx - tam / 2) + "px";
-    massaQueijoWrapper.style.top = (panelaCy - tam / 1.45) + "px";
+    if (!massaQueijoWrapper || !massaPanela || !massaPanela.offsetWidth) return;
+    const g = geometriaQueijo();
+    massaQueijoWrapper.style.width = g.tam + "px";
+    massaQueijoWrapper.style.height = g.tam + "px";
+    massaQueijoWrapper.style.left = (g.cx - g.tam / 2) + "px";
+    massaQueijoWrapper.style.top = (g.cy - g.tam / 2) + "px";
   }
   /* ---- Bisnaga de queijo na finalização — espiral igual ao da pizza ---- */
   function bisnagarFinal(item, pronto) {
@@ -1417,7 +1431,7 @@
     const alt = larg * ponta.h;
 
     /* Ajusta o canvas ao tamanho da frigideira e posiciona o wrapper sobre ela */
-    const tam = Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) * 0.85;
+    const tam = Math.round(geometriaQueijo().tam);
     massaQueijoCanvas.width = tam;
     massaQueijoCanvas.height = tam;
     posicionarQueijoWrapper();
@@ -1439,9 +1453,12 @@
     };
 
     /* Centro e raio baseados na imagem da frigideira (offsetLeft/offsetTop relativos ao #massa) */
-    const panelaCx = massaPanela ? massaPanela.offsetLeft + massaPanela.offsetWidth / 2 : r.width / 2;
-    const panelaCy = massaPanela ? massaPanela.offsetTop + massaPanela.offsetHeight / 2 : r.height / 2;
-    const panelaRaio = massaPanela ? Math.min(massaPanela.offsetWidth, massaPanela.offsetHeight) / 2 * 0.85 : Math.min(r.width, r.height) / 2 * 0.85;
+    /* Mesmo centro e mesmo raio do canvas do queijo: a ponta da bisnaga passa
+       exatamente por cima do que é desenhado */
+    const geo = geometriaQueijo();
+    const panelaCx = geo.cx;
+    const panelaCy = geo.cy;
+    const panelaRaio = geo.raio;
 
     /* Converte coordenadas normalizadas para pixels dentro do canvas */
     const local = (u, v) => [panelaCx + u * panelaRaio, panelaCy + v * panelaRaio];
@@ -1464,7 +1481,7 @@
     const t0 = performance.now() + 240;
     const DUR = 1700;
     let feito = 0;
-    const trilhaAtual = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0, cor: CORES[baseId] };
+    const trilhaAtual = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0, cor: CORES[baseId], id: item.id };
     massaQueijoTrilhas.push(trilhaAtual);
 
     const ir = () => {
@@ -1509,8 +1526,8 @@
      Em vez de clonar os elementos (que carregavam CSS da frigideira, como
      top/width com !important do carrossel), a cena do prato é reconstruída
      com elementos novos, usando só px relativos ao centro do prato. */
-  const PRATO_MAX = 170;   /* diâmetro máximo do prato (px) */
-  const PRATO_AREA = 0.66; /* fração do prato onde fica a comida (o "poço") */
+  const PRATO_ESCALA = 1.05; /* diâmetro do prato = 1,05 × largura da frigideira (medido no prato ideal) */
+  const PRATO_AREA = 0.75;   /* fração do prato ocupada pela comida (o "poço") */
   let pratoOcultos = [];   /* elementos escondidos ao montar o prato (para desfazer) */
 
   function mostrarPratoFinal(silencioso) {
@@ -1521,11 +1538,13 @@
     const rBox = massaEl.getBoundingClientRect();
     const esc = rBox.width / (massaEl.offsetWidth || rBox.width) || 1;
     const rCont = massaConteudo.getBoundingClientRect();
-    const cx = (rCont.left + rCont.width / 2 - rBox.left) / esc; /* centro da frigideira dentro de #massa */
-    const cy = (rCont.top + rCont.height / 2 - rBox.top) / esc;
+    /* O prato fica no centro de #massa (centro da caixa), como no prato ideal */
+    const cx = massaEl.offsetWidth / 2;
+    const cy = massaEl.offsetHeight / 2;
     const cw = massaConteudo.offsetWidth || 128;
     const ch = massaConteudo.offsetHeight || 128;
-    const D = Math.round(Math.min(PRATO_MAX, massaEl.offsetWidth * 0.86));
+    const caixa = massaEl.parentElement; /* .massa__prato-box (overflow hidden): o prato não pode passar dela */
+    const D = Math.round(Math.min(massaPanela.offsetWidth * PRATO_ESCALA, (caixa.clientWidth || 9999) - 20));
     const k = (D * PRATO_AREA) / cw; /* fator de escala frigideira → prato */
 
     const dados = {
@@ -1580,17 +1599,29 @@
       cena.appendChild(im);
       return im;
     }
-    if (dados.molho) pos(novaImg(dados.molho, "prato-molho", 2), 0, 0, cw * k, ch * k);
-    if (dados.tipo) pos(novaImg(dados.tipo, "prato-tipo", 3), 0, 0, cw * 0.97 * k, ch * 0.97 * k);
+    /* Ordem das camadas (de baixo para cima), para o molho ficar MISTURADO à massa:
+       1) molho base      → só aparece como o anel vermelho da borda
+       2) massa           → um pouco menor que o molho
+       3) molho por cima  → cobre o centro e some suavemente (máscara) nas bordas,
+                            deixando a massa aparecer ali
+       (antes: molho embaixo e massa inteira por cima = molho escondido) */
+    if (dados.molho) pos(novaImg(dados.molho, "prato-molho", 1), 0, 0, cw * k, ch * k);
+    if (dados.tipo) pos(novaImg(dados.tipo, "prato-tipo", 2), 0, 0, cw * 0.97 * k, ch * 0.97 * k);
+    if (dados.molho && dados.tipo) pos(novaImg(dados.molho, "prato-molho prato-molho--topo", 3), 0, 0, cw * k, ch * k);
+    /* "Filme" de molho translúcido POR CIMA da maioria dos ingredientes: eles ficam
+       envoltos no molho (afundados), em vez de parecerem colados sobre o prato.
+       Alguns ingredientes (1 a cada 3) e os temperos ficam por cima do filme, nítidos. */
+    if (dados.molho) pos(novaImg(dados.molho, "prato-molho prato-molho--filme", 5), 0, 0, cw * k, ch * k);
     if (dados.queijo) {
       const q = dados.queijo, cv = document.createElement("canvas");
       cv.width = q.canvas.width; cv.height = q.canvas.height;
       cv.getContext("2d").drawImage(q.canvas, 0, 0);
-      cv.className = "prato-queijo"; cv.style.zIndex = 4;
+      cv.className = "prato-queijo"; cv.style.zIndex = 4; /* abaixo do filme de molho (5) e dos ingredientes de cima (6) */
       cena.appendChild(pos(cv, q.dx, q.dy, q.tam * k, q.tam * k));
     }
-    dados.pecas.forEach(function (p) {
-      const im = novaImg(p.src, "prato-ing" + (p.tempero ? " tempero" : ""), 5);
+    dados.pecas.forEach(function (p, i) {
+      const sobreOFilme = p.tempero || i % 3 === 0;
+      const im = novaImg(p.src, "prato-ing" + (p.tempero ? " tempero" : ""), sobreOFilme ? 6 : 4);
       pos(im, p.dx, p.dy, Math.max(3, p.w * k), Math.max(3, p.h * k));
       if (p.transform) im.style.transform = p.transform; /* mantém a rotação original */
     });
@@ -1617,10 +1648,15 @@
         anim.cancel();
       };
       [].slice.call(cena.children).forEach(function (el, i) {
-        el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 250 + Math.min(i, 20) * 12, easing: "ease-out", fill: "backwards" });
+        const opFinal = getComputedStyle(el).opacity;
+        el.animate([{ opacity: 0 }, { opacity: opFinal }], { duration: 500, delay: 250 + Math.min(i, 20) * 12, easing: "ease-out", fill: "backwards" });
       });
     }
-    if (!silencioso) vibrar([10, 50, 10]);
+    if (!silencioso) {
+      vibrar([10, 50, 10]);
+      try { massaEl.parentElement.scrollIntoView({ behavior: calmo ? "auto" : "smooth", block: "center" }); } catch (e) { }
+      if (!calmo) { try { vaporizarFrigideira(massaPratoFinal, 4); } catch (e) { } }
+    }
   }
 
   /* Volta da etapa 4: remove o prato e restaura a frigideira */
@@ -1845,6 +1881,7 @@
             return;
           }
           estado.massaPorcoes[item.id] = n + 1;
+          massaHist.push(item);
           marcarCuba(item, n + 1);
           precificar("massa", item.preco);
           soltarPedido("massa");
@@ -1929,6 +1966,7 @@
         estado.massaMolho = molho.id;
         dizer("Molho " + molho.nome + " selecionado", null, null, "massa");
         derramarMolho(molho, null);
+        atualizarSelecionados();
         vibrar(6);
       });
       ingMolhoGrade.appendChild(b);
@@ -1953,6 +1991,7 @@
         estado.massaRecipiente = tipo.id;
         dizer(tipo.nome + " selecionado", null, null, "massa");
         jogarTipoMassa(tipo, null);
+        atualizarSelecionados();
         vibrar(6);
       });
       ingTipoGrade.appendChild(b);
@@ -1974,12 +2013,16 @@
         + '<span class="cuba-nome">' + item.nome + '</span>'
         + '<span class="cuba-preco">+ ' + reais(item.preco) + '</span>';
       let nFin = 0;
+      b._resetFin = function () { nFin = 0; };
+      b._setFin = function (n) { nFin = n; };
+      item.cubaEl = b;
       b.addEventListener("click", function () {
         if (nFin >= 2) {
           b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 250 });
           return;
         }
         nFin++;
+        massaHist.push(item);
         estado.massaPorcoes[item.id] = nFin;
         b.classList.add("on");
         const badge = b.querySelector(".cuba-badge");
@@ -2033,10 +2076,262 @@
         vibrar([8, 30, 8]);
         return;
       }
-      animarFinal();
-      mostrarPratoFinal();
-      setTimeout(function () { entregar("massa"); }, 800);
+      abrirResumo(function () {
+        animarFinal();
+        mostrarPratoFinal();
+        setTimeout(function () { entregar("massa"); miniaturaNaComanda(); }, 800);
+      });
     }
+  });
+
+
+  /* ================= EXTRAS DA MONTAGEM DE MASSAS ================= */
+  const appMassa = $("#appMassa");
+  const ALERG = { queijo: "lactose", catupiry: "lactose", cheddar: "lactose", "catupiry-fin": "lactose", "cheddar-fin": "lactose" };
+  let somAtivo = false, audioCtx = null;
+  function bip(f) {
+    if (!somAtivo) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.value = f; g.gain.value = 0.04;
+      o.connect(g); g.connect(audioCtx.destination); o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12); o.stop(audioCtx.currentTime + 0.13);
+    } catch (e) { }
+  }
+  appMassa.addEventListener("click", function (e) { if (e.target.closest(".cuba-btn")) bip(480 + Math.random() * 160); });
+
+  /* Etiquetas de alérgenos nas cubas de queijo */
+  MASSA.ingredientes.forEach(function (i) {
+    if (ALERG[i.id] && i.cubaEl) {
+      const t = document.createElement("span");
+      t.className = "cuba-alerg"; t.textContent = "contém lactose"; i.cubaEl.appendChild(t);
+    }
+  });
+
+  /* Remove UMA unidade de um ingrediente/finalização em qualquer etapa.
+     Se o prato final já estava montado, volta à frigideira, tira o item e remonta o prato. */
+  let pratoPendente = false, pratoTimer;
+  function agendarPrato() {
+    clearTimeout(pratoTimer);
+    pratoTimer = setTimeout(function () {
+      if (pratoPendente) { pratoPendente = false; mostrarPratoFinal(true); }
+    }, 650);
+  }
+  function removerFinal(item) {
+    const n = estado.massaPorcoes[item.id] || 0;
+    if (!n) return;
+    const b = item.cubaEl;
+    estado.massaPorcoes[item.id] = n - 1;
+    if (b._setFin) b._setFin(n - 1);
+    b.classList.toggle("on", n - 1 > 0);
+    const bd = b.querySelector(".cuba-badge");
+    if (bd) bd.textContent = n - 1 > 1 ? "\u00d7" + (n - 1) : "\u2713";
+    precificar("massa", -item.preco);
+    if (item.id === "catupiry-fin" || item.id === "cheddar-fin") {
+      for (let i = massaQueijoTrilhas.length - 1; i >= 0; i--) {
+        if (massaQueijoTrilhas[i].id === item.id) { massaQueijoTrilhas.splice(i, 1); break; }
+      }
+      massaQueijoCtx.clearRect(0, 0, massaQueijoCanvas.width, massaQueijoCanvas.height);
+      if (massaQueijoTrilhas.length) desenharQueijoMassa();
+    }
+    vibrar(16);
+    dizer("Tirou " + item.nome.toLowerCase(), null, null, "massa");
+  }
+  function removerSelecionado(item) {
+    if (massaPratoFinal.dataset.mostrado === "1") { desfazerPratoFinal(); pratoPendente = true; }
+    if (FINALIZACOES.indexOf(item) >= 0) {
+      removerFinal(item);
+    } else {
+      const et = massaEtapa;
+      massaEtapa = 1; /* aoTirar só aceita a etapa 1 */
+      const m = item.cubaEl.querySelector(".cuba-menos");
+      if (m) m.click();
+      massaEtapa = et;
+    }
+    if (pratoPendente) agendarPrato();
+  }
+  function desfazerUltimo() {
+    let it = null;
+    while (massaHist.length) { const c = massaHist.pop(); if ((estado.massaPorcoes[c.id] || 0) > 0) { it = c; break; } }
+    if (!it) { dizer("Nada para desfazer", null, null, "massa"); return; }
+    removerSelecionado(it);
+  }
+
+  /* Faixa "Seu prato": tudo que foi escolhido, com × para tirar o que entrou por engano */
+  const selBox = document.createElement("div");
+  selBox.className = "massa-sel"; selBox.hidden = true;
+  $("#massaLegenda").insertAdjacentElement("beforebegin", selBox);
+  function atualizarSelecionados() {
+    selBox.innerHTML = "";
+    function chip(src, nome, n, acao, removivel) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "massa-sel__chip";
+      b.setAttribute("aria-label", (removivel ? "Remover " : "Editar ") + nome);
+      b.title = removivel ? "Remover " + nome : "Trocar " + nome.toLowerCase();
+      b.innerHTML = '<img src="' + src + '" alt="">' + (removivel ? '<span class="massa-sel__x">\u00d7</span>' : '') + (n > 1 ? '<b class="massa-sel__n">' + n + '</b>' : '');
+      b.addEventListener("click", acao);
+      selBox.appendChild(b);
+    }
+    if (massaTipoSel) chip(IMG_MASSA + massaTipoSel.img, massaTipoSel.nome, 0, function () { atualizarStepper(3); }, false);
+    if (massaMolhoSel) chip(IMG_MASSA + massaMolhoSel.img, massaMolhoSel.nome, 0, function () { atualizarStepper(2); }, false);
+    MASSA.ingredientes.concat(FINALIZACOES).forEach(function (i) {
+      const n = estado.massaPorcoes[i.id] || 0, im = i.cubaEl && i.cubaEl.querySelector(".cuba-item-img");
+      if (n > 0 && im) chip(im.src, i.nome, n, function () { removerSelecionado(i); }, true);
+    });
+    selBox.hidden = !selBox.children.length;
+  }
+  window.__atualizarSel = atualizarSelecionados;
+  function recomecar() {
+    pratoPendente = false; clearTimeout(pratoTimer);
+    atualizarStepper(1);
+    massaHist.length = 0;
+    MASSA.ingredientes.forEach(function (i) { estado.massaPorcoes[i.id] = 0; marcarCuba(i, 0); });
+    FINALIZACOES.forEach(function (f) { estado.massaPorcoes[f.id] = 0; });
+    $$("#ingFinal .cuba-btn").forEach(function (b) {
+      b.classList.remove("on");
+      if (b._resetFin) b._resetFin();
+      const bd = b.querySelector(".cuba-badge"); if (bd) bd.textContent = "\u2713";
+    });
+    massaConteudo.innerHTML = "";
+    massaQueijoTrilhas.length = 0;
+    massaQueijoCtx.clearRect(0, 0, massaQueijoCanvas.width, massaQueijoCanvas.height);
+    massaMolhoSel = null; massaTipoSel = null; estado.massaMolho = null; estado.massaRecipiente = null;
+    [massaMolhoImg, massaTipoImg].forEach(function (im) { im.hidden = true; im.removeAttribute("src"); });
+    $$("#ingMolho .cuba-btn, #ingTipoMassa .cuba-btn").forEach(function (b) { b.classList.remove("cuba-selecionado"); });
+    UI.massa.comanda.hidden = true;
+    soltarPedido("massa");
+    precificar("massa");
+    dizer("Prato limpo. Escolha o recheio", null, null, "massa");
+  }
+
+  /* Sugestões prontas: montam o prato inteiro sozinhas */
+  const SUGESTOES = [
+    { nome: "Bolonhesa clássica", ings: ["presunto", "queijo", "cebola"], molho: "bolonhesa", tipo: 0 },
+    { nome: "Frango e brócolis", ings: ["frango", "brocolis", "alho"], molho: "branco", tipo: 1 },
+    { nome: "Calabresa", ings: ["calabresa", "cebola", "queijo", "pimentacheiro"], molho: "sugo", tipo: 2 }
+  ];
+  function aplicarSugestao(s) {
+    recomecar();
+    let t = 350;
+    s.ings.forEach(function (id) {
+      const it = MASSA.ingredientes.find(function (i) { return i.id === id; });
+      if (it && it.cubaEl) setTimeout(function () { it.cubaEl.click(); }, t);
+      t += 380;
+    });
+    const mi = Math.max(0, MOLHOS_MASSA.findIndex(function (m) { return m.id === s.molho; }));
+    const ti = Math.min(s.tipo, TIPOS_MASSA.length - 1);
+    setTimeout(function () { atualizarStepper(2); $$("#ingMolho .cuba-btn")[mi].click(); }, t + 300);
+    setTimeout(function () { atualizarStepper(3); $$("#ingTipoMassa .cuba-btn")[ti].click(); }, t + 1300);
+    setTimeout(function () { atualizarStepper(4); animarFinal(); mostrarPratoFinal(); }, t + 2300);
+  }
+
+  const ferr = document.createElement("div");
+  ferr.className = "massa-ferr";
+  ferr.innerHTML = '<button type="button" data-a="desfazer">\u21b6 Desfazer</button>'
+    + '<button type="button" data-a="recomecar">Recome\u00e7ar</button>'
+    + '<button type="button" data-a="som" aria-pressed="false">\ud83d\udd07 Som</button>'
+    + '<span class="massa-ferr__rot">Sugest\u00f5es:</span>'
+    + SUGESTOES.map(function (s, i) { return '<button type="button" class="massa-sug" data-s="' + i + '">' + s.nome + '</button>'; }).join("");
+  $("#massaCab").appendChild(ferr);
+  ferr.addEventListener("click", function (e) {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.a === "desfazer") desfazerUltimo();
+    else if (b.dataset.a === "recomecar") recomecar();
+    else if (b.dataset.a === "som") {
+      somAtivo = !somAtivo; b.setAttribute("aria-pressed", String(somAtivo));
+      b.textContent = somAtivo ? "\ud83d\udd0a Som" : "\ud83d\udd07 Som"; bip(660);
+    } else if (b.dataset.s) aplicarSugestao(SUGESTOES[+b.dataset.s]);
+  });
+
+  /* Resumo antes de enviar */
+  function abrirResumo(ok) {
+    $$(".massa-resumo", appMassa).forEach(function (n) { n.remove(); });
+    const sel = MASSA.ingredientes.concat(FINALIZACOES).filter(function (i) { return (estado.massaPorcoes[i.id] || 0) > 0; });
+    const alerg = ["gl\u00faten"];
+    sel.forEach(function (i) { if (ALERG[i.id] && alerg.indexOf(ALERG[i.id]) < 0) alerg.push(ALERG[i.id]); });
+    const el = document.createElement("div");
+    el.className = "massa-resumo";
+    el.innerHTML = '<div class="massa-resumo__card" role="dialog" aria-label="Resumo do pedido">'
+      + '<h3>Confira seu prato</h3>'
+      + '<p class="massa-resumo__base">' + (massaTipoSel ? massaTipoSel.nome : "Massa") + (massaMolhoSel ? " ao molho " + massaMolhoSel.nome.toLowerCase() : "") + ' <b>' + reais(MASSA.base) + '</b></p>'
+      + '<ul>' + (sel.length ? sel.map(function (i) { const n = estado.massaPorcoes[i.id]; return '<li><span>' + i.nome + (n > 1 ? ' \u00d7' + n : '') + '</span><b>' + (i.preco ? reais(i.preco * n) : 'incluso') + '</b></li>'; }).join("") : '<li><span>Sem ingredientes extras</span></li>') + '</ul>'
+      + '<p class="massa-resumo__alerg">Cont\u00e9m: ' + alerg.join(", ") + '</p>'
+      + '<p class="massa-resumo__total"><span>Total</span><b>' + reais(total("massa")) + '</b></p>'
+      + '<div class="massa-resumo__acoes"><button type="button" data-r="voltar">Voltar</button><button type="button" class="massa-resumo__ok" data-r="ok">Confirmar e enviar</button></div></div>';
+    el.addEventListener("click", function (e) {
+      const r = e.target.dataset && e.target.dataset.r;
+      if (r === "ok") { el.remove(); ok(); } else if (r === "voltar" || e.target === el) el.remove();
+    });
+    appMassa.appendChild(el);
+  }
+
+  /* Desenha a cena do prato final num canvas (miniatura da comanda e imagem de compartilhar) */
+  function cenaParaCanvas(S) {
+    const cena = massaPratoFinal.querySelector(".prato-cena");
+    if (!cena || !massaPratoFinal.offsetWidth) return null;
+    const f = S / massaPratoFinal.offsetWidth;
+    const c = document.createElement("canvas"); c.width = c.height = S;
+    const x = c.getContext("2d");
+    x.drawImage(massaPratoFinalImg, 0, 0, S, S);
+    [].slice.call(cena.children).sort(function (a, b) { return (+a.style.zIndex) - (+b.style.zIndex); }).forEach(function (el) {
+      const cs = getComputedStyle(el), w = el.offsetWidth * f, h = el.offsetHeight * f;
+      const m = cs.transform && cs.transform !== "none" ? new DOMMatrix(cs.transform) : new DOMMatrix();
+      x.save();
+      x.translate((el.offsetLeft + el.offsetWidth / 2) * f, (el.offsetTop + el.offsetHeight / 2) * f);
+      x.transform(m.a, m.b, m.c, m.d, 0, 0);
+      x.globalAlpha = parseFloat(cs.opacity);
+      let fonte = el;
+      if (el.classList.contains("prato-molho") || el.classList.contains("prato-tipo")) {
+        const o = document.createElement("canvas"); o.width = Math.ceil(w); o.height = Math.ceil(h);
+        const ox = o.getContext("2d");
+        ox.drawImage(el, 0, 0, w, h);
+        const feather = el.classList.contains("prato-molho--topo") || el.classList.contains("prato-molho--filme");
+        ox.globalCompositeOperation = "destination-in";
+        const g = ox.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+        const solido = feather ? (parseFloat(getComputedStyle(cena).getPropertyValue("--molho-solido")) || 80) / 100 : 0.995;
+        g.addColorStop(0, "#000"); g.addColorStop(solido, "#000"); g.addColorStop(1, "rgba(0,0,0,0)");
+        ox.fillStyle = g; ox.fillRect(0, 0, w, h);
+        fonte = o;
+      }
+      x.drawImage(fonte, -w / 2, -h / 2, w, h);
+      x.restore();
+    });
+    return c;
+  }
+  function miniaturaNaComanda() {
+    try {
+      const c = cenaParaCanvas(240); if (!c) return;
+      const ui = UI.massa;
+      $$(".comanda__prato", ui.comanda).forEach(function (n) { n.remove(); });
+      const im = new Image(); im.className = "comanda__prato"; im.alt = "Prato montado pelo cliente"; im.src = c.toDataURL("image/png");
+      ui.itens.insertAdjacentElement("beforebegin", im);
+    } catch (e) { }
+  }
+
+  /* Compartilhar meu prato */
+  const btnShare = document.createElement("button");
+  btnShare.type = "button"; btnShare.className = "massa-compartilhar"; btnShare.textContent = "\ud83d\udce4 Compartilhar meu prato";
+  $("#massaEtapa4").appendChild(btnShare);
+  btnShare.addEventListener("click", function () {
+    const c = cenaParaCanvas(640); if (!c) return;
+    const o = document.createElement("canvas"); o.width = 720; o.height = 820;
+    const x = o.getContext("2d");
+    x.fillStyle = "#f6edde"; x.fillRect(0, 0, 720, 820);
+    x.drawImage(c, 40, 30, 640, 640);
+    x.fillStyle = "#261a14"; x.textAlign = "center";
+    x.font = "800 34px sans-serif"; x.fillText("Meu prato no PedeA\u00cd", 360, 725);
+    x.font = "500 22px sans-serif"; x.fillStyle = "#75675c";
+    x.fillText(linhaDoPedido("massa").slice(0, 60), 360, 770);
+    o.toBlob(async function (b) {
+      const file = new File([b], "meu-prato-pedeai.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: "Meu prato no PedeA\u00cd", text: linhaDoPedido("massa") }); } catch (e) { }
+      } else {
+        const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = file.name; a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      }
+    }, "image/png");
   });
 
   medirQueijo();
