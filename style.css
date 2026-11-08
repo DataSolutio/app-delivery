@@ -2116,6 +2116,27 @@ button {
    ================================================================ */
 @media (max-width: 767px) {
 
+  /* Nav: menos padding laterais em celulares estreitos */
+  .nav {
+    width: min(1120px, calc(100% - 16px)) !important;
+    padding: 7px 8px 7px 12px !important;
+  }
+
+  /* Carrossel-nav: tabs empilhados ou mais compactos em mobile */
+  .carrossel-nav {
+    gap: 6px !important;
+    padding: 5px !important;
+  }
+
+  .carrossel-tab {
+    padding: 8px 3px 6px !important;
+    font-size: .7rem !important;
+  }
+
+  .carrossel-tab__icone {
+    font-size: 1.2rem !important;
+  }
+
   /* Palco: sem altura fixa — rola livremente */
   .demos--carrossel>.palco {
     height: auto !important;
