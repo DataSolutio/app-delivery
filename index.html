@@ -244,6 +244,123 @@
 
   <div class="calor" id="calor"></div>
   <footer class="rodape"><span>© 2026 PedeAÍ</span><span>Feito para quem vende no balcão e no zap.</span></footer>
+  <!-- Modal de checkout / pagamento (simulado, sem backend) -->
+  <div id="modalCheckout" class="modal" hidden>
+    <div class="modal__overlay"></div>
+    <div class="modal__painel">
+      <div class="modal__cab">
+        <h2 class="modal__titulo">Finalizar pedido</h2>
+        <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="modal__corpo">
+        <!-- Resumo -->
+        <div class="modal__resumo">
+          <div class="modal__linha"><span>Itens</span><span id="modalItens">-</span></div>
+          <div class="modal__linha"><span>Subtotal</span><span id="modalSubtotal">R$ 0,00</span></div>
+        </div>
+
+        <!-- Tipo de entrega -->
+        <fieldset class="modal__grupo">
+          <legend>Receber por</legend>
+          <div class="modal__opcoes">
+            <label class="modal__opcao">
+              <input type="radio" name="entrega" value="retirada" checked>
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Retirada no local</span>
+                <span class="modal__opcao__valor">Grátis</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="entrega" value="entrega">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Tele entrega</span>
+                <span class="modal__opcao__valor">+ R$ 8,90</span>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Endereço de entrega (aparece apenas para Tele entrega) -->
+        <fieldset class="modal__grupo" id="modalEndereco" hidden>
+          <legend>Endereço de entrega</legend>
+          <div class="modal__campos">
+            <input type="text" id="modalRua" placeholder="Rua / Avenida" maxlength="80">
+            <input type="text" id="modalNumero" placeholder="Nº" maxlength="10">
+            <input type="text" id="modalBairro" placeholder="Bairro" maxlength="60">
+          </div>
+          <div class="modal__campos">
+            <input type="text" id="modalCep" placeholder="CEP" maxlength="9">
+            <input type="text" id="modalComplemento" placeholder="Complemento (opcional)" maxlength="60">
+            <input type="tel" id="modalTelefone" placeholder="Telefone para contato" maxlength="20">
+          </div>
+          <p class="modal__dica">Informe o endereço completo para a entrega.</p>
+        </fieldset>
+
+        <!-- Forma de pagamento -->
+        <fieldset class="modal__grupo">
+          <legend>Pagamento</legend>
+          <div class="modal__opcoes">
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="dinheiro" checked>
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Dinheiro na entrega</span>
+                <span class="modal__opcao__valor">À vista</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="pix">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Pix</span>
+                <span class="modal__opcao__valor">QR code simulado</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="cartao">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Cartão de crédito</span>
+                <span class="modal__opcao__valor">À vista / parcelado</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- QR Code Pix (aparece apenas quando Pix selecionado) -->
+          <div id="modalQrPix" class="modal__qrcode" hidden>
+            <div class="qr__box">
+              <canvas id="qrCanvas" width="220" height="220"></canvas>
+              <div class="qr__texto">Chave Pix: loja@pedeai.com.br</div>
+              <div class="qr__sub">Abra a câmera do celular e aponte para o QR code</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Total -->
+        <div class="modal__total">
+          <span>Total</span>
+          <span id="modalTotal">R$ 0,00</span>
+        </div>
+      </div>
+
+      <!-- Rodapé fixo com botão confirmar -->
+      <div class="modal__rodape">
+        <button class="modal__confirmar" type="button">Confirmar pedido</button>
+      </div>
+
+      <!-- Tela de sucesso -->
+      <div class="modal__sucesso" hidden>
+        <div class="modal__check">✓</div>
+        <h3 class="modal__sucesso__titulo">Pedido confirmado!</h3>
+        <p class="modal__sucesso__msg" id="modalMsgSucesso">Seu pedido está a caminho.</p>
+        <button class="modal__novo" type="button">Fazer novo pedido</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 

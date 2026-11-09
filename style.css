@@ -2545,3 +2545,296 @@ button {
 @media (max-width: 767px) {
   .demos--carrossel #slideMassa .massa-sel { grid-column: unset; grid-row: unset; }
 }
+
+/* ================================================================
+   MODAL DE CHECKOUT / PAGAMENTO (simulado)
+   ================================================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 13, 43, .45);
+  backdrop-filter: blur(6px);
+}
+.modal[hidden] { display: none !important; }
+
+.modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+}
+.modal__painel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  max-height: 92vh; /* altura máxima para não ultrapassar a tela */
+  background: var(--card);
+  border-radius: var(--r-xl);
+  box-shadow: 0 20px 60px var(--shadow-strong);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalEntrar .35s var(--ease-out);
+}
+
+@keyframes modalEntrar {
+  from { opacity: 0; transform: translateY(20px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal__cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.modal__titulo {
+  font: 800 1.25rem var(--font-display);
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -.02em;
+}
+.modal__fechar {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--paper-2);
+  color: var(--ink-3);
+  border-radius: 10px;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal__fechar:hover { background: var(--uva); color: var(--on-uva); }
+
+.modal__corpo {
+  padding: 18px 20px;
+  overflow-y: auto; /* permite scroll quando o conteúdo não cabe na tela */
+  flex: 1; /* ocupa o espaço disponível entre cabeçalho e rodapé */
+}
+
+.modal__resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--paper-2);
+  border-radius: var(--r-md);
+}
+.modal__linha {
+  display: flex;
+  justify-content: space-between;
+  font-size: .85rem;
+}
+.modal__linha span:first-child { color: var(--ink-3); }
+.modal__linha span:last-child { font-weight: 600; color: var(--ink); }
+
+.modal__grupo { margin-bottom: 16px; }
+.modal__grupo legend {
+  font: 600 .8rem var(--font-body);
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+.modal__opcoes { display: flex; flex-direction: column; gap: 8px; }
+.modal__opcao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.modal__opcao:hover { border-color: var(--uva-soft); }
+.modal__opcao input { width: 0; height: 0; opacity: 0; position: absolute; }
+.modal__opcao__radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line-2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fff;
+}
+.modal__opcao input:checked + .modal__opcao__radio {
+  border-color: var(--uva);
+  background: var(--uva);
+}
+.modal__opcao input:checked + .modal__opcao__radio::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+}
+.modal__opcao div { flex: 1; min-width: 0; }
+.modal__opcao__label {
+  font: 600 .9rem var(--font-body);
+  color: var(--ink);
+  display: block;
+}
+.modal__opcao__valor {
+  font-size: .78rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* QR Code Pix */
+.modal__qrcode { margin-top: 14px; padding: 14px 16px; background: #fff; border-radius: var(--r-md); border: 1px solid var(--line); }
+.qr__box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.qr__box canvas { background: #fff; border: 1px solid var(--line-2); border-radius: 8px; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.qr__texto {
+  font: 600 .82rem var(--font-body);
+  color: var(--ink);
+  text-align: center;
+  word-break: break-all;
+}
+.qr__sub {
+  font-size: .72rem;
+  color: var(--ink-3);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.modal__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 1.05rem;
+}
+.modal__total span:first-child { color: var(--ink-3); }
+.modal__total span:last-child {
+  font: 800 1.1rem var(--font-display);
+  color: var(--uva);
+}
+
+.modal__confirmar {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--uva);
+  color: var(--on-uva);
+  font: 700 1rem var(--font-display);
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 4px 14px rgba(106, 44, 216, .35);
+}
+.modal__confirmar:hover { background: var(--uva-press); }
+.modal__confirmar:active { transform: scale(.97); }
+
+/* Rodapé fixo com botão confirmar */
+.modal__rodape {
+  padding: 14px 20px;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+}
+
+/* Tela de sucesso */
+.modal__sucesso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 24px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+.modal__check {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--verde);
+  color: #fff;
+  font: 700 2rem/56px sans-serif;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(31, 157, 107, .35);
+  animation: checkPulse .6s var(--ease-out);
+}
+@keyframes checkPulse {
+  0% { transform: scale(.7); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.modal__sucesso__titulo {
+  font: 800 1.3rem var(--font-display);
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.modal__sucesso__msg {
+  font-size: .9rem;
+  color: var(--ink-3);
+  margin: 0 0 24px;
+  line-height: 1.4;
+}
+.modal__novo {
+  padding: 12px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: #fff;
+  color: var(--ink);
+  font: 600 .9rem var(--font-body);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.modal__novo:hover { background: var(--paper-2); }
+
+/* Formulário de endereço de entrega */
+.modal__campos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.modal__campos input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font: 400 .85rem var(--font-body);
+  color: var(--ink);
+  box-sizing: border-box;
+}
+.modal__campos input:focus {
+  outline: 2px solid var(--uva);
+  border-color: var(--uva);
+}
+.modal__dica {
+  font-size: .75rem;
+  color: var(--ink-3);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Ajuste mobile para o modal */
+@media (max-width: 480px) {
+  .modal { padding: 16px; }
+  .modal__painel { max-width: 100%; }
+  .modal__corpo { padding: 16px 18px; }
+  .modal__campos {
+    grid-template-columns: 1fr;
+  }
+}

@@ -161,13 +161,9 @@
     estado.pedido++;
     ui.num.textContent = "Pedido #" + String(estado.pedido).padStart(4, "0");
     ui.itens.textContent = linhaDoPedido(app);
-    ui.comanda.hidden = true;
-    void ui.comanda.offsetWidth;
-    ui.comanda.hidden = false;
-    ui.pedir.classList.add("ok");
-    ui.texto.textContent = "Chegou na cozinha";
-    clearTimeout(ui.fecha);
-    ui.fecha = setTimeout(() => { if (!ui.comanda.matches(":hover")) ui.comanda.hidden = true; }, 9000);
+    /* Abre o modal de checkout em vez de mostrar apenas a comanda */
+    const subtotal = total(app);
+    abrirCheckout(app, subtotal);
   }
   function soltarPedido(app) {
     const ui = UI[app];
@@ -2429,6 +2425,178 @@
         ativar(idx, true);
       }, 80);
     }, { passive: true });
+
+  })();
+
+  /* ================================================================
+     CHECKOUT / PAGAMENTO — simulado (sem backend)
+     Tele entrega, retirada, Pix, dinheiro, cartão
+     ================================================================ */
+  (function () {
+    const modal = $("#modalCheckout");
+    const overlay = $(".modal__overlay");
+    const fechar = $(".modal__fechar");
+    const corpo = $(".modal__corpo");
+    const sucesso = $(".modal__sucesso");
+
+    const elItens = $("#modalItens");
+    const elSubtotal = $("#modalSubtotal");
+    const elTotal = $("#modalTotal");
+    const btnConfirmar = $(".modal__confirmar");
+    const btnNovo = $(".modal__novo");
+
+    const radiosEntrega = $$('input[name="entrega"]');
+    const radiosPagamento = $$('input[name="pagamento"]');
+    const qrPix = $("#modalQrPix");
+    const qrCanvas = $("#qrCanvas");
+    const endereco = $("#modalEndereco");
+
+    let appAtual = null;
+    let subtotalAtual = 0;
+    let taxaEntrega = 0;
+    let formaPagamentoAtual = "dinheiro";
+
+    /* Reset ao abrir */
+    function resetarOpcoes() {
+      radiosEntrega.forEach(r => { r.checked = r.value === "retirada"; r.disabled = false; });
+      radiosPagamento.forEach(r => { r.checked = r.value === "dinheiro"; });
+      qrPix.hidden = true;
+      endereco.hidden = true;
+      taxaEntrega = 0;
+      formaPagamentoAtual = "dinheiro";
+    }
+
+    /* Calcular total */
+    function atualizarTotal() {
+      const total = subtotalAtual + taxaEntrega;
+      elTotal.textContent = reais(total);
+    }
+
+    /* Abrir modal de checkout */
+    function abrirCheckout(app, subtotal) {
+      appAtual = app;
+      subtotalAtual = subtotal;
+      resetarOpcoes();
+
+      elItens.textContent = linhaDoPedido(app);
+      elSubtotal.textContent = reais(subtotal);
+      atualizarTotal();
+
+      const ui = UI[app];
+      ui.comanda.hidden = true;
+      ui.pedir.classList.remove("ok");
+
+      modal.hidden = false;
+      void modal.offsetWidth;
+      document.body.style.overflow = "hidden";
+    }
+
+    /* Fechar modal */
+    function fecharCheckout() {
+      modal.hidden = true;
+      sucesso.hidden = true;
+      corpo.hidden = false;
+      document.body.style.overflow = "";
+      appAtual = null;
+    }
+
+    /* Eventos de entrega */
+    radiosEntrega.forEach(r => {
+      r.addEventListener("change", function () {
+        taxaEntrega = this.value === "entrega" ? 8.90 : 0;
+        endereco.hidden = this.value !== "entrega";
+        atualizarTotal();
+      });
+    });
+
+    /* Eventos de pagamento */
+    radiosPagamento.forEach(r => {
+      r.addEventListener("change", function () {
+        formaPagamentoAtual = this.value;
+        qrPix.hidden = this.value !== "pix";
+        if (this.value === "pix") gerarQRCode();
+      });
+    });
+
+    /* Gerar QR code simulado (canvas com padrão tipo QR) */
+    function gerarQRCode() {
+      const c = qrCanvas;
+      const x = c.getContext("2d");
+      const tam = c.width;
+      const modulo = 10;
+      const cols = Math.floor(tam / modulo);
+      x.fillStyle = "#fff";
+      x.fillRect(0, 0, tam, tam);
+      x.fillStyle = "#000";
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < cols; j++) {
+          const borda = i < 7 || i > cols - 8 || j < 7 || j > cols - 8;
+          const preencher = borda ? (Math.random() > 0.7) : (Math.random() > 0.5);
+          if (preencher) x.fillRect(i * modulo, j * modulo, modulo, modulo);
+        }
+      }
+      /* Centro com marca da loja */
+      x.fillStyle = "#6A2CD8";
+      x.fillRect(tam / 2 - modulo / 2, tam / 2 - modulo / 2, modulo, modulo);
+    }
+
+    /* Confirmar pedido */
+    btnConfirmar.addEventListener("click", function () {
+      const tipoEntrega = document.querySelector('input[name="entrega"]:checked').value;
+      const pagamento = formaPagamentoAtual;
+      const total = subtotalAtual + taxaEntrega;
+
+      let msgTipo = tipoEntrega === "entrega"
+        ? "Tele entrega — taxa de R$ 8,90 incluída."
+        : "Retirada no local — sem taxa.";
+      let msgPag = pagamento === "dinheiro"
+        ? "Pagamento em dinheiro na entrega."
+        : pagamento === "pix"
+          ? "Pagamento via Pix — escaneie o QR code acima."
+          : "Pagamento no cartão de crédito.";
+
+      let msgEnd = "";
+      if (tipoEntrega === "entrega") {
+        const rua = $("#modalRua").value.trim();
+        const numero = $("#modalNumero").value.trim();
+        const bairro = $("#modalBairro").value.trim();
+        const cep = $("#modalCep").value.trim();
+        const comp = $("#modalComplemento").value.trim();
+        const tel = $("#modalTelefone").value.trim();
+        msgEnd = " Endereço: " + rua + ", " + numero + " - " + bairro + " (CEP: " + cep + ")" +
+          (comp ? " - " + comp : "") + ". Tel: " + tel;
+      }
+
+      corpo.hidden = true;
+      sucesso.hidden = false;
+      $("#modalMsgSucesso").textContent = msgTipo + " " + msgPag + msgEnd + " Total: " + reais(total);
+    });
+
+    /* Novo pedido — reinicia o app atual */
+    btnNovo.addEventListener("click", function () {
+      fecharCheckout();
+      const ui = UI[appAtual];
+      ui.comanda.hidden = true;
+      ui.pedir.classList.remove("ok");
+      if (appAtual === "massa") {
+        ui.texto.textContent = "Próximo: molho →";
+      } else {
+        ui.texto.textContent = "Adicionar ao pedido";
+      }
+      dizer("Monte um novo pedido", null, null, appAtual);
+    });
+
+    /* Fechar com X ou overlay */
+    fechar.addEventListener("click", fecharCheckout);
+    overlay.addEventListener("click", fecharCheckout);
+
+    /* Tecla ESC */
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !modal.hidden) fecharCheckout();
+    });
+
+    /* Expor para uso na função entregar */
+    window.abrirCheckout = abrirCheckout;
 
   })();
 
