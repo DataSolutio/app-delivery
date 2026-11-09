@@ -2429,175 +2429,202 @@
   })();
 
   /* ================================================================
-     CHECKOUT / PAGAMENTO — simulado (sem backend)
-     Tele entrega, retirada, Pix, dinheiro, cartão
+     CHECKOUT / PAGAMENTO
+     modo "demo": simulado. modo "producao": envia para a Edge Function create-order,
+     que recalcula o preço no servidor (o total do navegador é só exibição).
      ================================================================ */
   (function () {
-    const modal = $("#modalCheckout");
-    const overlay = $(".modal__overlay");
-    const fechar = $(".modal__fechar");
-    const corpo = $(".modal__corpo");
-    const sucesso = $(".modal__sucesso");
+    const CFG = Object.assign({ modo: "demo", restaurante: "demo", apiUrl: "", anonKey: "", taxaEntrega: 8.9 }, window.PEDEAI_CONFIG || {});
+    const modal = $("#modalCheckout"), overlay = $(".modal__overlay"), fechar = $(".modal__fechar");
+    const corpo = $(".modal__corpo"), sucesso = $(".modal__sucesso"), rodape = $("#modalRodape");
+    const elItens = $("#modalItens"), elSubtotal = $("#modalSubtotal"), elTotal = $("#modalTotal");
+    const btnConfirmar = $(".modal__confirmar"), btnNovo = $(".modal__novo"), elErro = $("#modalErro");
+    const radiosEntrega = $$('input[name="entrega"]'), radiosPagamento = $$('input[name="pagamento"]');
+    const qrPix = $("#modalQrPix"), qrCanvas = $("#qrCanvas"), endereco = $("#modalEndereco");
+    const trocoBox = $("#modalTrocoBox");
+    const campo = { nome: $("#modalNome"), tel: $("#modalTelefone"), rua: $("#modalRua"), numero: $("#modalNumero"), bairro: $("#modalBairro"), cep: $("#modalCep"), comp: $("#modalComplemento"), troco: $("#modalTroco") };
 
-    const elItens = $("#modalItens");
-    const elSubtotal = $("#modalSubtotal");
-    const elTotal = $("#modalTotal");
-    const btnConfirmar = $(".modal__confirmar");
-    const btnNovo = $(".modal__novo");
+    let appAtual = null, subtotalAtual = 0, taxaEntrega = 0, formaPagamentoAtual = "dinheiro";
+    let enviando = false, chaveIdem = "";
 
-    const radiosEntrega = $$('input[name="entrega"]');
-    const radiosPagamento = $$('input[name="pagamento"]');
-    const qrPix = $("#modalQrPix");
-    const qrCanvas = $("#qrCanvas");
-    const endereco = $("#modalEndereco");
+    $("#modalTaxaLabel").textContent = "+ " + reais(CFG.taxaEntrega);
+    const novaChave = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "k-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    const digitos = s => (s || "").replace(/\D/g, "");
 
-    let appAtual = null;
-    let subtotalAtual = 0;
-    let taxaEntrega = 0;
-    let formaPagamentoAtual = "dinheiro";
+    /* máscaras simples */
+    campo.tel.addEventListener("input", function () {
+      const d = digitos(this.value).slice(0, 11);
+      this.value = d.length > 6 ? "(" + d.slice(0, 2) + ") " + d.slice(2, d.length > 10 ? 7 : 6) + "-" + d.slice(d.length > 10 ? 7 : 6)
+        : d.length > 2 ? "(" + d.slice(0, 2) + ") " + d.slice(2) : d;
+    });
+    campo.cep.addEventListener("input", function () {
+      const d = digitos(this.value).slice(0, 8);
+      this.value = d.length > 5 ? d.slice(0, 5) + "-" + d.slice(5) : d;
+    });
 
-    /* Reset ao abrir */
+    function mostrarErro(msg) { elErro.textContent = msg; elErro.hidden = !msg; }
+    function limparErros() {
+      mostrarErro("");
+      Object.keys(campo).forEach(k => campo[k].removeAttribute("aria-invalid"));
+    }
+    Object.keys(campo).forEach(k => campo[k].addEventListener("input", function () { this.removeAttribute("aria-invalid"); }));
+
+    function tipoEntrega() { return document.querySelector('input[name="entrega"]:checked').value; }
+
     function resetarOpcoes() {
       radiosEntrega.forEach(r => { r.checked = r.value === "retirada"; r.disabled = false; });
       radiosPagamento.forEach(r => { r.checked = r.value === "dinheiro"; });
-      qrPix.hidden = true;
-      endereco.hidden = true;
-      taxaEntrega = 0;
-      formaPagamentoAtual = "dinheiro";
+      qrPix.hidden = true; endereco.hidden = true; trocoBox.hidden = false;
+      taxaEntrega = 0; formaPagamentoAtual = "dinheiro";
+      $("#modalDinheiroSub").textContent = "Na retirada";
+      campo.troco.value = "";
     }
+    function atualizarTotal() { elTotal.textContent = reais(subtotalAtual + taxaEntrega); }
 
-    /* Calcular total */
-    function atualizarTotal() {
-      const total = subtotalAtual + taxaEntrega;
-      elTotal.textContent = reais(total);
-    }
-
-    /* Abrir modal de checkout */
     function abrirCheckout(app, subtotal) {
-      appAtual = app;
-      subtotalAtual = subtotal;
-      resetarOpcoes();
-
+      appAtual = app; subtotalAtual = subtotal; chaveIdem = novaChave(); enviando = false;
+      resetarOpcoes(); limparErros();
+      corpo.hidden = false; sucesso.hidden = true; rodape.hidden = false;
+      btnConfirmar.disabled = false; btnConfirmar.textContent = "Confirmar pedido";
       elItens.textContent = linhaDoPedido(app);
       elSubtotal.textContent = reais(subtotal);
       atualizarTotal();
-
       const ui = UI[app];
-      ui.comanda.hidden = true;
-      ui.pedir.classList.remove("ok");
-
-      modal.hidden = false;
-      void modal.offsetWidth;
-      document.body.style.overflow = "hidden";
+      ui.comanda.hidden = true; ui.pedir.classList.remove("ok");
+      modal.hidden = false; document.body.style.overflow = "hidden";
     }
-
-    /* Fechar modal */
     function fecharCheckout() {
-      modal.hidden = true;
-      sucesso.hidden = true;
-      corpo.hidden = false;
+      modal.hidden = true; sucesso.hidden = true; corpo.hidden = false; rodape.hidden = false;
       document.body.style.overflow = "";
-      appAtual = null;
     }
 
-    /* Eventos de entrega */
-    radiosEntrega.forEach(r => {
-      r.addEventListener("change", function () {
-        taxaEntrega = this.value === "entrega" ? 8.90 : 0;
-        endereco.hidden = this.value !== "entrega";
-        atualizarTotal();
-      });
-    });
+    radiosEntrega.forEach(r => r.addEventListener("change", function () {
+      const ent = this.value === "entrega";
+      taxaEntrega = ent ? CFG.taxaEntrega : 0;
+      endereco.hidden = !ent;
+      $("#modalDinheiroSub").textContent = ent ? "Na entrega" : "Na retirada";
+      atualizarTotal();
+    }));
+    radiosPagamento.forEach(r => r.addEventListener("change", function () {
+      formaPagamentoAtual = this.value;
+      qrPix.hidden = this.value !== "pix";
+      trocoBox.hidden = this.value !== "dinheiro";
+      if (this.value === "pix") gerarQRCode();
+    }));
 
-    /* Eventos de pagamento */
-    radiosPagamento.forEach(r => {
-      r.addEventListener("change", function () {
-        formaPagamentoAtual = this.value;
-        qrPix.hidden = this.value !== "pix";
-        if (this.value === "pix") gerarQRCode();
-      });
-    });
-
-    /* Gerar QR code simulado (canvas com padrão tipo QR) */
+    /* QR simulado (fase de testes — o Pix real entra numa etapa posterior) */
     function gerarQRCode() {
-      const c = qrCanvas;
-      const x = c.getContext("2d");
-      const tam = c.width;
-      const modulo = 10;
-      const cols = Math.floor(tam / modulo);
-      x.fillStyle = "#fff";
-      x.fillRect(0, 0, tam, tam);
-      x.fillStyle = "#000";
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < cols; j++) {
-          const borda = i < 7 || i > cols - 8 || j < 7 || j > cols - 8;
-          const preencher = borda ? (Math.random() > 0.7) : (Math.random() > 0.5);
-          if (preencher) x.fillRect(i * modulo, j * modulo, modulo, modulo);
-        }
+      const c = qrCanvas, x = c.getContext("2d"), tam = c.width, modulo = 10, cols = Math.floor(tam / modulo);
+      x.fillStyle = "#fff"; x.fillRect(0, 0, tam, tam); x.fillStyle = "#000";
+      for (let i = 0; i < cols; i++) for (let j = 0; j < cols; j++) {
+        const borda = i < 7 || i > cols - 8 || j < 7 || j > cols - 8;
+        if (borda ? Math.random() > 0.7 : Math.random() > 0.5) x.fillRect(i * modulo, j * modulo, modulo, modulo);
       }
-      /* Centro com marca da loja */
-      x.fillStyle = "#6A2CD8";
-      x.fillRect(tam / 2 - modulo / 2, tam / 2 - modulo / 2, modulo, modulo);
+      x.fillStyle = "#6A2CD8"; x.fillRect(tam / 2 - modulo / 2, tam / 2 - modulo / 2, modulo, modulo);
     }
 
-    /* Confirmar pedido */
-    btnConfirmar.addEventListener("click", function () {
-      const tipoEntrega = document.querySelector('input[name="entrega"]:checked').value;
-      const pagamento = formaPagamentoAtual;
-      const total = subtotalAtual + taxaEntrega;
-
-      let msgTipo = tipoEntrega === "entrega"
-        ? "Tele entrega — taxa de R$ 8,90 incluída."
-        : "Retirada no local — sem taxa.";
-      let msgPag = pagamento === "dinheiro"
-        ? "Pagamento em dinheiro na entrega."
-        : pagamento === "pix"
-          ? "Pagamento via Pix — escaneie o QR code acima."
-          : "Pagamento no cartão de crédito.";
-
-      let msgEnd = "";
-      if (tipoEntrega === "entrega") {
-        const rua = $("#modalRua").value.trim();
-        const numero = $("#modalNumero").value.trim();
-        const bairro = $("#modalBairro").value.trim();
-        const cep = $("#modalCep").value.trim();
-        const comp = $("#modalComplemento").value.trim();
-        const tel = $("#modalTelefone").value.trim();
-        msgEnd = " Endereço: " + rua + ", " + numero + " - " + bairro + " (CEP: " + cep + ")" +
-          (comp ? " - " + comp : "") + ". Tel: " + tel;
+    /* Validação: devolve a lista de campos inválidos */
+    function validar() {
+      const erros = [];
+      const falta = (k, msg) => erros.push({ k, msg });
+      if (campo.nome.value.trim().length < 2) falta("nome", "Informe seu nome.");
+      const t = digitos(campo.tel.value);
+      if (t.length < 10 || t.length > 11) falta("tel", "Informe um telefone com DDD.");
+      if (tipoEntrega() === "entrega") {
+        if (campo.rua.value.trim().length < 3) falta("rua", "Informe a rua ou avenida.");
+        if (!campo.numero.value.trim()) falta("numero", "Informe o número (ou S/N).");
+        if (campo.bairro.value.trim().length < 2) falta("bairro", "Informe o bairro.");
+        const c = digitos(campo.cep.value);
+        if (c && c.length !== 8) falta("cep", "O CEP deve ter 8 dígitos.");
       }
+      if (formaPagamentoAtual === "dinheiro" && campo.troco.value.trim()) {
+        const v = parseFloat(campo.troco.value.replace(/\./g, "").replace(",", "."));
+        if (!(v >= subtotalAtual + taxaEntrega)) falta("troco", "O troco deve ser para um valor maior ou igual ao total.");
+      }
+      return erros;
+    }
 
-      corpo.hidden = true;
-      sucesso.hidden = false;
-      $("#modalMsgSucesso").textContent = msgTipo + " " + msgPag + msgEnd + " Total: " + reais(total);
+    /* Monta os itens só com IDs e quantidades — o servidor busca os preços */
+    function montarItem(app) {
+      const so = (lista, mapa) => { const o = {}; lista.forEach(i => { const n = mapa(i.id) || 0; if (n > 0) o[i.id] = n; }); return o; };
+      if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]) };
+      if (app === "massa") return {
+        tipo: "massa", molho: estado.massaMolho, tipo_massa: estado.massaRecipiente,
+        ingredientes: so(MASSA.ingredientes, id => estado.massaPorcoes[id]),
+        finalizacoes: so(FINALIZACOES, id => estado.massaPorcoes[id])
+      };
+      return { tipo: "lanche", pao: estado.pao, camadas: so(LANCHE.camadas.filter(c => !c.fixo), id => estado.lanche.get(id)) };
+    }
+
+    function montarPayload() {
+      const ent = tipoEntrega() === "entrega";
+      return {
+        restaurante: CFG.restaurante, chave_idempotencia: chaveIdem,
+        tipo_entrega: ent ? "entrega" : "retirada", pagamento: formaPagamentoAtual,
+        troco_para: formaPagamentoAtual === "dinheiro" && campo.troco.value.trim() ? parseFloat(campo.troco.value.replace(/\./g, "").replace(",", ".")) : null,
+        cliente: { nome: campo.nome.value.trim(), telefone: digitos(campo.tel.value) },
+        endereco: ent ? { rua: campo.rua.value.trim(), numero: campo.numero.value.trim(), bairro: campo.bairro.value.trim(), cep: digitos(campo.cep.value), complemento: campo.comp.value.trim() } : null,
+        itens: [montarItem(appAtual)]
+      };
+    }
+
+    async function enviarPedido(payload) {
+      if (CFG.modo !== "producao") {
+        await new Promise(r => setTimeout(r, 500));
+        return { numero: estado.pedido, total: subtotalAtual + taxaEntrega, simulado: true };
+      }
+      let resp;
+      try {
+        resp = await fetch(CFG.apiUrl.replace(/\/$/, "") + "/functions/v1/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: CFG.anonKey, Authorization: "Bearer " + CFG.anonKey },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) { throw new Error("Sem conexão. Verifique sua internet e tente de novo."); }
+      const j = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(j.erro || "Não foi possível enviar o pedido. Tente novamente.");
+      return j;
+    }
+
+    btnConfirmar.addEventListener("click", async function () {
+      if (enviando) return;
+      limparErros();
+      const erros = validar();
+      if (erros.length) {
+        erros.forEach(e => campo[e.k].setAttribute("aria-invalid", "true"));
+        mostrarErro(erros[0].msg); campo[erros[0].k].focus();
+        return;
+      }
+      enviando = true; btnConfirmar.disabled = true; btnConfirmar.textContent = "Enviando…";
+      try {
+        const r = await enviarPedido(montarPayload());
+        const ent = tipoEntrega() === "entrega";
+        const pag = formaPagamentoAtual === "dinheiro" ? "Pagamento em dinheiro" + (ent ? " na entrega." : " na retirada.")
+          : formaPagamentoAtual === "pix" ? "Pagamento via Pix — escaneie o QR code." : "Pagamento no cartão de crédito.";
+        corpo.hidden = true; rodape.hidden = true; sucesso.hidden = false;
+        $("#modalMsgSucesso").textContent = "Pedido #" + String(r.numero).padStart(4, "0") + ". " + (ent ? "Tele entrega." : "Retirada no local.") + " " + pag + " Total: " + reais(Number(r.total));
+      } catch (e) {
+        mostrarErro(e.message); btnConfirmar.disabled = false; btnConfirmar.textContent = "Confirmar pedido";
+      } finally { enviando = false; }
     });
 
-    /* Novo pedido — reinicia o app atual */
+    /* Novo pedido: lê o app ANTES de fechar (antes, o valor já tinha sido zerado) */
     btnNovo.addEventListener("click", function () {
+      const app = appAtual;
       fecharCheckout();
-      const ui = UI[appAtual];
-      ui.comanda.hidden = true;
-      ui.pedir.classList.remove("ok");
-      if (appAtual === "massa") {
-        ui.texto.textContent = "Próximo: molho →";
+      if (app === "massa") {
+        recomecar();
+        UI.massa.texto.textContent = "Próximo: molho →";
       } else {
-        ui.texto.textContent = "Adicionar ao pedido";
+        location.reload(); /* pizza e lanche ainda não têm função de reinício */
       }
-      dizer("Monte um novo pedido", null, null, appAtual);
     });
 
-    /* Fechar com X ou overlay */
     fechar.addEventListener("click", fecharCheckout);
     overlay.addEventListener("click", fecharCheckout);
-
-    /* Tecla ESC */
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !modal.hidden) fecharCheckout();
-    });
-
-    /* Expor para uso na função entregar */
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) fecharCheckout(); });
     window.abrirCheckout = abrirCheckout;
-
   })();
 
 })();
+

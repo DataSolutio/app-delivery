@@ -2838,3 +2838,11 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Checkout: validação, troco e envio */
+.modal__erro { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #fdecea; color: #a12a1b; font-size: .82rem; font-weight: 600; }
+.modal__corpo input[aria-invalid="true"] { border-color: #c8402a !important; box-shadow: 0 0 0 2px rgba(200, 64, 42, .18); }
+.modal__troco { margin-top: 10px; }
+.modal__troco input { width: 100%; }
+.modal__confirmar:disabled { opacity: .6; cursor: progress; }

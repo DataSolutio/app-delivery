@@ -247,9 +247,9 @@
   <!-- Modal de checkout / pagamento (simulado, sem backend) -->
   <div id="modalCheckout" class="modal" hidden>
     <div class="modal__overlay"></div>
-    <div class="modal__painel">
+    <div class="modal__painel" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
       <div class="modal__cab">
-        <h2 class="modal__titulo">Finalizar pedido</h2>
+        <h2 class="modal__titulo" id="modalTitulo">Finalizar pedido</h2>
         <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
       </div>
 
@@ -259,6 +259,15 @@
           <div class="modal__linha"><span>Itens</span><span id="modalItens">-</span></div>
           <div class="modal__linha"><span>Subtotal</span><span id="modalSubtotal">R$ 0,00</span></div>
         </div>
+
+        <!-- Dados do cliente (obrigatórios em retirada e entrega) -->
+        <fieldset class="modal__grupo">
+          <legend>Seus dados</legend>
+          <div class="modal__campos">
+            <input type="text" id="modalNome" placeholder="Seu nome" maxlength="80" autocomplete="name">
+            <input type="tel" id="modalTelefone" placeholder="Telefone (WhatsApp)" maxlength="16" autocomplete="tel" inputmode="tel">
+          </div>
+        </fieldset>
 
         <!-- Tipo de entrega -->
         <fieldset class="modal__grupo">
@@ -277,7 +286,7 @@
               <span class="modal__opcao__radio"></span>
               <div>
                 <span class="modal__opcao__label">Tele entrega</span>
-                <span class="modal__opcao__valor">+ R$ 8,90</span>
+                <span class="modal__opcao__valor" id="modalTaxaLabel">+ R$ 8,90</span>
               </div>
             </label>
           </div>
@@ -292,9 +301,8 @@
             <input type="text" id="modalBairro" placeholder="Bairro" maxlength="60">
           </div>
           <div class="modal__campos">
-            <input type="text" id="modalCep" placeholder="CEP" maxlength="9">
+            <input type="text" id="modalCep" placeholder="CEP" maxlength="9" inputmode="numeric" autocomplete="postal-code">
             <input type="text" id="modalComplemento" placeholder="Complemento (opcional)" maxlength="60">
-            <input type="tel" id="modalTelefone" placeholder="Telefone para contato" maxlength="20">
           </div>
           <p class="modal__dica">Informe o endereço completo para a entrega.</p>
         </fieldset>
@@ -307,8 +315,8 @@
               <input type="radio" name="pagamento" value="dinheiro" checked>
               <span class="modal__opcao__radio"></span>
               <div>
-                <span class="modal__opcao__label">Dinheiro na entrega</span>
-                <span class="modal__opcao__valor">À vista</span>
+                <span class="modal__opcao__label">Dinheiro</span>
+                <span class="modal__opcao__valor" id="modalDinheiroSub">Na retirada</span>
               </div>
             </label>
             <label class="modal__opcao">
@@ -329,6 +337,11 @@
             </label>
           </div>
 
+          <!-- Troco (só para dinheiro) -->
+          <div id="modalTrocoBox" class="modal__troco">
+            <input type="text" id="modalTroco" placeholder="Troco para quanto? (opcional)" inputmode="decimal" maxlength="10">
+          </div>
+
           <!-- QR Code Pix (aparece apenas quando Pix selecionado) -->
           <div id="modalQrPix" class="modal__qrcode" hidden>
             <div class="qr__box">
@@ -347,7 +360,8 @@
       </div>
 
       <!-- Rodapé fixo com botão confirmar -->
-      <div class="modal__rodape">
+      <div class="modal__rodape" id="modalRodape">
+        <p class="modal__erro" id="modalErro" role="alert" hidden></p>
         <button class="modal__confirmar" type="button">Confirmar pedido</button>
       </div>
 
@@ -361,6 +375,7 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 
