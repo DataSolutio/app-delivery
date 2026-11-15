@@ -167,3 +167,17 @@ button, input { font: inherit; }
   .item__nome { flex: 1 1 100%; }
   .cardapio__lote { margin-left: 0; width: 100%; }
 }
+
+/* ---- Celular e tablet ---- */
+@media (max-width: 700px) {
+  .topo { padding: 10px 12px; }
+  .topo__marca { order: 1; flex: 1 1 auto; min-width: 0; }
+  .topo__acoes { order: 2; flex: 1 1 100%; justify-content: space-between; gap: 8px; }
+  .topo button { min-height: 44px; }
+  .quadro { padding: 10px; }
+  .btn { flex: 1 1 auto; }
+}
+@media (pointer: coarse) {
+  .cardapio input, .login__card input { font-size: 16px; } /* evita o zoom automático do iOS */
+  .topo button, .btn-mini { min-height: 44px; }
+}

@@ -3023,3 +3023,37 @@ button {
 .pedido__btn:disabled { opacity: .5; cursor: not-allowed; }
 .fav__desc { margin: 8px 0 0; font-size: .88rem; color: var(--ink-2); }
 .fav--off { opacity: .75; }
+
+/* ================================================================
+   RESPONSIVIDADE (celular)
+   ================================================================ */
+.nav__acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.nav__ola { font-weight: 600; font-size: .9rem; }
+
+@media (max-width: 640px) {
+  /* Topo: logo em cima, ações embaixo, quebrando em linhas (nunca uma pílula esticada) */
+  .nav { position: static; flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px; border-radius: 22px; }
+  .nav__acoes { flex: 1 1 100%; justify-content: flex-start; gap: 6px; }
+  .nav .botao { min-height: 44px; padding: 0 14px; font-size: .85rem; }
+
+  /* Janelas viram "folha" ancorada embaixo: cabem na tela e deixam o teclado respirar */
+  .modal { padding: 0; align-items: flex-end; }
+  .modal__painel { max-width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: var(--r-xl) var(--r-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .modal__cab { padding: 14px 16px 12px; }
+  .modal__corpo input, .modal__corpo select, .modal__corpo textarea { font-size: 16px; } /* evita o zoom automático do iOS */
+  .pedido__btn { flex: 1 1 auto; }
+
+  /* Página de vendas */
+  .lp-sec { padding-top: 36px; }
+  .lp-hero { padding-top: 32px; }
+  .lp-acoes { flex-direction: column; align-items: stretch; }
+  .lp-acoes .botao { justify-content: center; min-height: 48px; }
+  .lp-card { padding: 16px; }
+  .lp-cta { padding: 28px 18px; margin-bottom: 36px; }
+  .lp-cta .botao { justify-content: center; width: 100%; min-height: 48px; }
+  .rest__faixa { font-size: .82rem; border-radius: 16px; }
+  .rodape { padding: 24px 16px; }
+}
+@media (max-width: 380px) {
+  .nav .botao { padding: 0 10px; font-size: .8rem; }
+}
