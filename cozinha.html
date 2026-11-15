@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>PedeAÍ · Cozinha</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='10' fill='%236A2CD8'/><circle cx='16' cy='16' r='6' fill='%23C8F04A'/></svg>">
+  <link rel="stylesheet" href="cozinha.css">
+</head>
+
+<body>
+  <!-- Login da equipe -->
+  <main id="login" class="login" hidden>
+    <form id="formLogin" class="login__card" autocomplete="on">
+      <h1>Pede<span>AÍ</span> · Cozinha</h1>
+      <p>Entre com a conta da equipe do restaurante.</p>
+      <label>E-mail<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>Senha<input id="loginSenha" type="password" autocomplete="current-password" required></label>
+      <p id="loginErro" class="login__erro" role="alert" hidden></p>
+      <button id="loginBtn" type="submit">Entrar</button>
+    </form>
+  </main>
+
+  <!-- Painel -->
+  <div id="painel" hidden>
+    <header class="topo">
+      <div class="topo__marca">Pede<span>AÍ</span> · Cozinha <b id="nomeRest"></b></div>
+      <nav class="abas" aria-label="Seções do painel">
+        <button id="abaPedidos" class="aba aba--ativa" type="button" data-aba="pedidos" aria-pressed="true">Pedidos</button>
+        <button id="abaCardapio" class="aba" type="button" data-aba="cardapio" aria-pressed="false">Cardápio</button>
+      </nav>
+      <div class="topo__acoes">
+        <label class="sw sw--topo" title="Abre ou fecha o recebimento de novos pedidos">
+          <input id="topoAberto" class="sw__in" type="checkbox" role="switch" checked>
+          <span class="sw__trilho"></span><span id="topoAbertoTxt" class="sw__txt">Aberto</span>
+        </label>
+        <span id="conexao" class="conexao" data-estado="off" title="Conexão em tempo real"></span>
+        <span id="contagem" class="topo__contagem"></span>
+        <button id="btnSom" type="button">🔔 Som: ligado</button>
+        <button id="sair" type="button">Sair</button>
+      </div>
+    </header>
+    <p id="modoDemo" class="faixa faixa--demo" hidden>Modo demonstração: pedidos fictícios, nada é gravado.</p>
+    <p id="aviso" class="faixa faixa--erro" role="status" hidden></p>
+    <p id="faixaFechado" class="faixa faixa--fechado" role="status" hidden>Restaurante FECHADO: os clientes não conseguem fazer novos pedidos. Use a chave no topo para abrir.</p>
+    <section id="quadro" class="quadro" aria-label="Pedidos"></section>
+
+    <!-- Cardápio: o dono ajusta preços, limites e disponibilidade -->
+    <section id="cardapio" class="cardapio" aria-label="Cardápio" hidden>
+      <aside class="cardapio__lado">
+        <input id="cardapioBusca" class="cardapio__busca" type="search" placeholder="Buscar item" aria-label="Buscar item do cardápio">
+        <nav id="cardapioCats" class="cats" aria-label="Categorias do cardápio"></nav>
+      </aside>
+      <div class="cardapio__main">
+        <div class="cardapio__barra">
+          <label class="item__campo">Taxa de entrega (R$)
+            <input id="lojaTaxa" type="number" min="0" max="999" step="0.5" inputmode="decimal"></label>
+          <span id="lojaMsg" class="item__msg" role="status"></span>
+          <button id="dicaBtn" class="dica" type="button" aria-expanded="false" aria-controls="cardapioDica" aria-label="Como funciona">ⓘ</button>
+        </div>
+        <p id="cardapioDica" class="cardapio__dica" hidden>As mudanças valem na hora para novos pedidos. Quem já está com a página aberta vê os valores novos ao recarregar. Itens fora do ar somem do app do cliente.</p>
+        <div id="cardapioLista"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Área de impressão (cupom 80 mm) -->
+  <pre id="ticket" class="ticket" aria-hidden="true"></pre>
+
+  <script src="config.js"></script>
+  <!-- Em produção, fixe uma versão exata (ex.: @2.x.y) em vez de @2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cozinha.js"></script>
+</body>
+
+</html>

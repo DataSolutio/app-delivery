@@ -6,6 +6,7 @@
   const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function vibrar(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) { } }
+
   function dizer(txt, acao, rotulo, app = "pizza") {
     const d = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") }[app];
     if (!d) return;
@@ -28,6 +29,34 @@
   const IMG_PIZZA = "imagens/pizza/";
   const IMG_HAMBURGER = "imagens/hamburger/";
   const IMG_MASSA = "imagens/massas/";
+  /* ---- Cardápio vindo do banco ----
+     window.PEDEAI_CARDAPIO é preenchido por cardapio.js (view cardapio_publico) antes deste arquivo rodar.
+     Do banco vêm: preço, limite por item e disponibilidade. Nomes, imagens e animações continuam aqui.
+     Sem dados do banco (demo, falha de rede), valem os valores deste arquivo.
+     Grupo sem nenhuma linha no banco, ou sem nenhum id conhecido, fica intocado.
+     Item que falta no banco, ou está inativo, some da tela. */
+  const CARD = new Map();
+  if (Array.isArray(window.PEDEAI_CARDAPIO)) window.PEDEAI_CARDAPIO.forEach(r => {
+    if (!CARD.has(r.grupo)) CARD.set(r.grupo, new Map());
+    CARD.get(r.grupo).set(String(r.ref_id), r);
+  });
+  function precoDe(grupo, id) {
+    const m = CARD.get(grupo), r = m && m.get(id), p = r ? Number(r.preco) : NaN;
+    return Number.isFinite(p) ? p : null;
+  }
+  function aplicarLista(lista, grupo, opc) {
+    const m = CARD.get(grupo);
+    if (!m) return;
+    if (!lista.some(it => !it.fixo && m.has(it.id))) { console.warn("Cardápio: grupo sem ids conhecidos, mantido como está:", grupo); return; }
+    for (let i = lista.length - 1; i >= 0; i--) {
+      const it = lista[i], r = m.get(it.id);
+      if (it.fixo) continue;
+      if (!r) { lista.splice(i, 1); continue; }
+      const p = Number(r.preco);
+      if (opc.preco && Number.isFinite(p)) it.preco = p;
+      if (opc.max && Number.isInteger(r.max_qtd) && r.max_qtd >= 1) it.max = r.max_qtd;
+    }
+  }
   const PIZZA = {
     tamanhos: { P: { preco: 34.9, escala: 0.84 }, M: { preco: 42.9, escala: 0.92 }, G: { preco: 49.9, escala: 1 } },
     ingredientes: [
@@ -79,6 +108,11 @@
     { id: "batata", nome: "Batata", preco: 2, base: "b-pao-base", hb: 0.355, topo: "b-pao-batata-topo", ht: 0.537 },
     { id: "parmesao", nome: "Parmesão", preco: 3, base: "b-pao-base", hb: 0.355, topo: "b-pao-parmesao-topo", ht: 0.494 },
   ];
+  Object.keys(PIZZA.tamanhos).forEach(k => { const p = precoDe("pizza.tamanho", k); if (p != null) PIZZA.tamanhos[k].preco = p; });
+  aplicarLista(PIZZA.ingredientes, "pizza.ingrediente", { preco: true });
+  { const p = precoDe("lanche.base", "base"); if (p != null) LANCHE.base = p; }
+  aplicarLista(LANCHE.camadas, "lanche.ingrediente", { preco: true, max: true });
+  aplicarLista(PAES, "lanche.pao", { preco: true });
   const FERRAMENTAS = {
     "espatula": { ax: 0.3032, ay: 0.6009, h: 0.3435, k: 1.572 },
     "mao": { ax: 0.2189, ay: 0.9662, h: 1.0442, k: 0.85 },
@@ -89,6 +123,7 @@
     pecas: [], lanche: new Map(), pao: "brioche", chapa: null, forno: null, pedido: 127,
     massaMolho: "bolonhesa", massaRecipiente: "pote", massaPorcoes: {},
   };
+  if (!PAES.some(p => p.id === estado.pao) && PAES.length) estado.pao = PAES[0].id; /* pão padrão indisponível */
   const pizzaEl = $("#pizza"), giroEl = $("#pizzaGiro"), cobertura = $("#cobertura");
   const dicas = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") };
   const dicaT = {};
@@ -210,6 +245,8 @@
       { id: "calabresaflocos", nome: "Pimenta calabresa", preco: 0, cat: "temperos", img: "t-flocos-1.webp", pasta: "massas", max: 2 },
     ],
   };
+  { const p = precoDe("massa.base", "base"); if (p != null) MASSA.base = p; }
+  aplicarLista(MASSA.ingredientes, "massa.ingrediente", { preco: true, max: true });
   MASSA.ingredientes.forEach(i => { estado.massaPorcoes[i.id] = 0; });
   function chip(item, grade, aoTocar, aoTirar, app = "pizza") {
     const b = document.createElement("button");
@@ -1194,6 +1231,9 @@
     { id: "catupiry-fin", nome: "Catupiry", arte: "catupiry", pasta: "pizza", preco: 5 },
     { id: "cheddar-fin", nome: "Cheddar", arte: "cheddar", pasta: "pizza", preco: 5 },
   ];
+  aplicarLista(FINALIZACOES, "massa.finalizacao", { preco: true });
+  aplicarLista(MOLHOS_MASSA, "massa.molho", {});
+  aplicarLista(TIPOS_MASSA, "massa.tipo", {});
 
   /* ---- Atualiza o stepper visual ---- */
   function atualizarStepper(etapa) {
@@ -2435,8 +2475,22 @@
      ================================================================ */
   (function () {
     const CFG = Object.assign({ modo: "demo", restaurante: "demo", apiUrl: "", anonKey: "", taxaEntrega: 8.9 }, window.PEDEAI_CONFIG || {});
-    const modal = $("#modalCheckout"), overlay = $(".modal__overlay"), fechar = $(".modal__fechar");
-    const corpo = $(".modal__corpo"), sucesso = $(".modal__sucesso"), rodape = $("#modalRodape");
+    /* pedido.html?r=slug escolhe o restaurante; ?demo força o modo de demonstração */
+    (function () {
+      const q = new URLSearchParams(location.search), r = (q.get("r") || "").toLowerCase();
+      if (/^[a-z0-9-]{1,60}$/.test(r)) CFG.restaurante = r;
+      if (window.PEDEAI_DEMO === true) CFG.modo = "demo";   /* só demo.html liga isto */
+    })();
+    /* pedido.html fora do modo "producao": avisa, em vez de aceitar pedidos que não chegam a ninguém */
+    if (window.PEDEAI_DEMO !== true && CFG.modo !== "producao") {
+      const f = document.getElementById("restFaixa");
+      if (f) {
+        f.textContent = "Modo de teste: os pedidos feitos nesta página NÃO chegam ao restaurante. Avise o responsável pelo site.";
+        f.classList.add("rest__faixa--fechado"); f.hidden = false;
+      }
+    }
+    const modal = $("#modalCheckout"), overlay = $(".modal__overlay", modal), fechar = $(".modal__fechar", modal);
+    const corpo = $(".modal__corpo", modal), sucesso = $(".modal__sucesso", modal), rodape = $("#modalRodape");
     const elItens = $("#modalItens"), elSubtotal = $("#modalSubtotal"), elTotal = $("#modalTotal");
     const btnConfirmar = $(".modal__confirmar"), btnNovo = $(".modal__novo"), elErro = $("#modalErro");
     const radiosEntrega = $$('input[name="entrega"]'), radiosPagamento = $$('input[name="pagamento"]');
@@ -2450,6 +2504,341 @@
     $("#modalTaxaLabel").textContent = "+ " + reais(CFG.taxaEntrega);
     const novaChave = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "k-" + Date.now() + "-" + Math.random().toString(36).slice(2);
     const digitos = s => (s || "").replace(/\D/g, "");
+
+    /* ================================================================
+       AUTH DO CLIENTE — Supabase Auth (login / cadastro / logout)
+       ================================================================ */
+    const sbCliente = (CFG.modo === "producao" && window.supabase)
+      ? window.supabase.createClient(CFG.apiUrl, CFG.anonKey, { auth: { storageKey: "pedeai-cliente" } })
+      : null;
+    let usuarioCliente = null;
+
+    /* Dados públicos do restaurante (nome, aberto, taxa). Melhor esforço: quem decide é o servidor. */
+    async function carregarRestaurante() {
+      if (!sbCliente || CFG.modo !== "producao") return;
+      try {
+        const { data } = await sbCliente.from("restaurantes_publicos")
+          .select("nome, aberto, taxa_entrega").eq("slug", CFG.restaurante).maybeSingle();
+        if (!data) return;
+        const faixa = $("#restFaixa");
+        faixa.textContent = data.aberto ? data.nome : data.nome + " · fechado no momento";
+        faixa.classList.toggle("rest__faixa--fechado", !data.aberto);
+        faixa.hidden = false;
+        document.title = data.nome + " · Faça seu pedido";
+        if (data.taxa_entrega != null) {
+          CFG.taxaEntrega = Number(data.taxa_entrega);
+          $("#modalTaxaLabel").textContent = "+ " + reais(CFG.taxaEntrega);
+        }
+      } catch (e) { }
+    }
+    carregarRestaurante();
+
+    function atualizarNavCliente() {
+      const btnEntrar = $("#navCliente");
+      const btnSair = $("#navSair");
+      if (!btnEntrar || !btnSair) return;
+      const ola = $("#navOla"), ped = $("#navPedidos"), fav = $("#navFavoritos");
+      if (ped) ped.style.display = (CFG.modo === "producao" && usuarioCliente) ? "inline-flex" : "none";
+      if (fav) fav.style.display = (CFG.modo === "producao" && usuarioCliente) ? "inline-flex" : "none";
+      if (CFG.modo !== "producao") { btnEntrar.style.display = "none"; btnSair.style.display = "none"; if (ola) ola.hidden = true; return; }
+      if (ola) {
+        const md = (usuarioCliente && usuarioCliente.user_metadata) || {};
+        const primeiro = String(md.nome || (usuarioCliente && usuarioCliente.email) || "").trim().split(/[\s@]/)[0];
+        ola.textContent = usuarioCliente ? "Olá, " + primeiro : "";
+        ola.hidden = !usuarioCliente;
+      }
+      if (usuarioCliente) {
+        btnEntrar.style.display = "none";
+        btnSair.style.display = "inline-flex";
+        btnSair.textContent = "Sair";
+      } else {
+        btnEntrar.style.display = "inline-flex";
+        btnSair.style.display = "none";
+      }
+    }
+
+    async function carregarSessaoCliente() {
+      if (!sbCliente) {
+        console.warn("Supabase client não inicializado. Verifique config.js (apiUrl e anonKey).");
+        return;
+      }
+      console.debug("Supabase anonKey prefix:", CFG.anonKey ? CFG.anonKey.substring(0, 20) + "..." : "VAZIA");
+      try {
+        const { data } = await sbCliente.auth.getSession();
+        usuarioCliente = data.session?.user ?? null;
+        atualizarNavCliente();
+        sincronizarPedidos();
+      } catch (e) {
+        console.error("Supabase session error:", e);
+        usuarioCliente = null;
+        atualizarNavCliente();
+      }
+    }
+
+    /* ================================================================
+       MEUS PEDIDOS — lista do cliente, com status em tempo real
+       (RLS: o cliente só enxerga os próprios pedidos; ver clientes.sql)
+       ================================================================ */
+    const modalPedidos = $("#modalPedidos");
+    const listaPedidos = $("#pedidosLista"), pedidosVazio = $("#pedidosVazio"), pedidosErro = $("#pedidosErro");
+    const ETAPAS_PEDIDO = [["recebido", "Recebido"], ["em_preparo", "Em preparo"], ["pronto", "Pronto"], ["saiu_entrega", "A caminho"], ["entregue", "Entregue"]];
+    let canalPedidos = null, canalPedidosUsuario = null, recargaPedidos = null, pollPedidos = null;
+    const pedMk = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
+
+    function etapasDoPedido(p) {
+      return ETAPAS_PEDIDO
+        .filter(e => p.tipo_entrega === "entrega" || e[0] !== "saiu_entrega")
+        .map(e => (e[0] === "entregue" && p.tipo_entrega !== "entrega") ? ["entregue", "Retirado"] : e);
+    }
+    function cartaoPedido(p) {
+      const c = pedMk("article", "pedido pedido--" + p.status);
+      const cab = pedMk("div", "pedido__cab");
+      cab.appendChild(pedMk("strong", "pedido__num", "#" + String(p.numero).padStart(4, "0")));
+      cab.appendChild(pedMk("span", "pedido__data", new Date(p.criado_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })));
+      c.appendChild(cab);
+      if (p.status === "cancelado") {
+        c.appendChild(pedMk("p", "pedido__cancelado", "Pedido cancelado"));
+      } else {
+        const etapas = etapasDoPedido(p), atual = etapas.findIndex(e => e[0] === p.status);
+        const ol = pedMk("ol", "pedido__etapas");
+        etapas.forEach(function (e, i) {
+          const li = pedMk("li", i < atual ? "feito" : i === atual ? "atual" : "", e[1]);
+          if (i === atual) li.setAttribute("aria-current", "step");
+          ol.appendChild(li);
+        });
+        c.appendChild(ol);
+      }
+      const ul = pedMk("ul", "pedido__itens");
+      (p.order_items || []).forEach(it => ul.appendChild(pedMk("li", null, it.descricao + (it.qtd > 1 ? " ×" + it.qtd : ""))));
+      c.appendChild(ul);
+      const rod = pedMk("div", "pedido__rodape");
+      rod.appendChild(pedMk("span", null, p.tipo_entrega === "entrega" ? "Entrega" : "Retirada no local"));
+      rod.appendChild(pedMk("strong", null, reais(Number(p.total))));
+      c.appendChild(rod);
+      const item = itemDoPedido(p);
+      if (item) {
+        const desc = p.order_items[0].descricao, ac = pedMk("div", "pedido__acoes");
+        const novo = pedMk("button", "pedido__btn", "Pedir de novo"); novo.type = "button";
+        novo.disabled = !itemValido(item);
+        if (novo.disabled) novo.title = "Algum item saiu do cardápio";
+        novo.addEventListener("click", () => pedirRapido(item, desc));
+        const fav = pedMk("button", "pedido__btn pedido__btn--sec", "☆ Favoritar"); fav.type = "button";
+        fav.addEventListener("click", () => salvarFavorito(item, desc, fav));
+        ac.appendChild(novo); ac.appendChild(fav); c.appendChild(ac);
+      }
+      return c;
+    }
+
+    async function carregarPedidos() {
+      if (!sbCliente || !usuarioCliente) return;
+      const { data, error } = await sbCliente.from("orders")
+        .select("id, numero, status, tipo_entrega, total, criado_em, order_items(tipo, descricao, config, qtd)")
+        .eq("customer_id", usuarioCliente.id).order("criado_em", { ascending: false }).limit(20);
+      if (error) { pedidosErro.textContent = "Não foi possível carregar seus pedidos."; pedidosErro.hidden = false; return; }
+      pedidosErro.hidden = true;
+      listaPedidos.replaceChildren(...data.map(cartaoPedido));
+      pedidosVazio.hidden = data.length > 0;
+    }
+    function agendarRecargaPedidos() { clearTimeout(recargaPedidos); recargaPedidos = setTimeout(carregarPedidos, 300); }
+
+    function abrirPedidos(e) {
+      if (e) e.preventDefault();
+      if (!usuarioCliente) return;
+      modalPedidos.hidden = false; document.body.style.overflow = "hidden";
+      carregarPedidos();
+      clearInterval(pollPedidos); pollPedidos = setInterval(carregarPedidos, 30000); /* rede de segurança do Realtime */
+    }
+    function fecharPedidos() {
+      if (modalPedidos.hidden) return;
+      modalPedidos.hidden = true; document.body.style.overflow = "";
+      clearInterval(pollPedidos);
+    }
+
+    /* Assina as mudanças dos pedidos do cliente logado; encerra no logout ou troca de conta */
+    function sincronizarPedidos() {
+      const uid = usuarioCliente ? usuarioCliente.id : null;
+      if (uid === canalPedidosUsuario) return;
+      if (canalPedidos && sbCliente) { sbCliente.removeChannel(canalPedidos); canalPedidos = null; }
+      canalPedidosUsuario = uid;
+      listaPedidos.replaceChildren();
+      favoritos = []; listaFav.replaceChildren();
+      if (!uid || !sbCliente) { fecharPedidos(); fecharFavoritos(); return; }
+      canalPedidos = sbCliente.channel("meus-pedidos-" + uid)
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: "customer_id=eq." + uid }, agendarRecargaPedidos)
+        .subscribe();
+    }
+
+    if (CFG.modo !== "producao") $("#modalVerPedidos").style.display = "none"; /* sem conta, não há o que acompanhar */
+    $("#navPedidos").addEventListener("click", abrirPedidos);
+    $("#modalVerPedidos").addEventListener("click", function () { fecharCheckout(); abrirPedidos(); });
+    modalPedidos.querySelectorAll(".modal__fechar, .modal__overlay").forEach(b => b.addEventListener("click", fecharPedidos));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fecharPedidos(); });
+
+    /* ================================================================
+       FAVORITOS — pedidos salvos para repetir com poucos toques
+       (tabela "favoritos", protegida por RLS; ver favoritos.sql)
+       Guarda só as escolhas (ids e quantidades). O preço é recalculado com o cardápio de hoje
+       e, no envio, de novo pelo servidor.
+       ================================================================ */
+    const modalFav = $("#modalFavoritos"), listaFav = $("#favLista"), favVazio = $("#favVazio"), favErro = $("#favErro");
+    let favoritos = [], itemRapido = null, ultimoPedido = null;
+
+    const mapaOk = (mapa, lista, padrao) => Object.entries(mapa || {}).every(function (par) {
+      const x = lista.find(i => i.id === par[0]);
+      return !!x && Number.isInteger(par[1]) && par[1] >= 1 && par[1] <= (x.max || padrao);
+    });
+    const somaMapa = (mapa, lista) => Object.entries(mapa || {}).reduce((s, par) => s + par[1] * ((lista.find(i => i.id === par[0]) || {}).preco || 0), 0);
+    function itemValido(it) {
+      if (!it || typeof it !== "object") return false;
+      if (it.tipo === "pizza") return Object.prototype.hasOwnProperty.call(PIZZA.tamanhos, it.tamanho) && mapaOk(it.ingredientes, PIZZA.ingredientes, MAX_PORCOES);
+      if (it.tipo === "lanche") return PAES.some(p => p.id === it.pao) && mapaOk(it.camadas, LANCHE.camadas.filter(c => !c.fixo), 2);
+      if (it.tipo === "massa") return MOLHOS_MASSA.some(m => m.id === it.molho) && TIPOS_MASSA.some(t => t.id === it.tipo_massa)
+        && mapaOk(it.ingredientes, MASSA.ingredientes, 2) && mapaOk(it.finalizacoes, FINALIZACOES, 2);
+      return false;
+    }
+    function precoItem(it) {
+      if (it.tipo === "pizza") return PIZZA.tamanhos[it.tamanho].preco + somaMapa(it.ingredientes, PIZZA.ingredientes);
+      if (it.tipo === "lanche") return LANCHE.base + PAES.find(p => p.id === it.pao).preco + somaMapa(it.camadas, LANCHE.camadas);
+      return MASSA.base + somaMapa(it.ingredientes, MASSA.ingredientes) + somaMapa(it.finalizacoes, FINALIZACOES);
+    }
+    function itemDoPedido(p) {
+      const it = (p.order_items || [])[0];
+      return it && it.config && typeof it.config === "object" ? Object.assign({ tipo: it.tipo }, it.config) : null;
+    }
+
+    /* Abre o checkout direto com um item salvo, sem passar pela montagem */
+    function pedirRapido(item, descricao) {
+      if (!usuarioCliente) return;
+      if (!itemValido(item)) { mostrarFavErro("Alguns itens saíram do cardápio, então este pedido não pode ser repetido."); return; }
+      fecharPedidos(); fecharFavoritos();
+      abrirCheckout(item.tipo, Math.round(precoItem(item) * 100) / 100);
+      itemRapido = item;               /* depois do abrirCheckout, que zera o valor */
+      elItens.textContent = descricao;
+    }
+
+    async function salvarFavorito(item, descricao, btn) {
+      if (!usuarioCliente || !sbCliente || !item) return;
+      const sugestao = descricao.length > 60 ? descricao.slice(0, 57) + "…" : descricao;
+      const nome = (window.prompt("Dê um nome ao favorito:", sugestao) || "").trim();
+      if (!nome) return;
+      const antes = btn.textContent;
+      btn.disabled = true; btn.textContent = "Salvando…";
+      const { error } = await sbCliente.from("favoritos").insert({ restaurante: CFG.restaurante, nome: nome.slice(0, 60), descricao: descricao.slice(0, 300), item: item });
+      if (!error || error.code === "23505") {
+        btn.textContent = error ? "★ Já é favorito" : "★ Salvo nos favoritos";   /* continua desativado */
+        return;
+      }
+      btn.disabled = false; btn.textContent = "Não foi possível salvar";
+      setTimeout(() => { btn.textContent = antes; }, 2500);
+    }
+
+    function mostrarFavErro(msg) { favErro.textContent = msg; favErro.hidden = !msg; }
+    function cartaoFavorito(f) {
+      const ok = itemValido(f.item);
+      const c = pedMk("article", "pedido fav" + (ok ? "" : " fav--off"));
+      const cab = pedMk("div", "pedido__cab");
+      cab.appendChild(pedMk("strong", "pedido__num", f.nome));
+      if (ok) cab.appendChild(pedMk("span", "pedido__data", reais(precoItem(f.item))));
+      c.appendChild(cab);
+      c.appendChild(pedMk("p", "fav__desc", f.descricao));
+      if (!ok) c.appendChild(pedMk("p", "pedido__cancelado", "Alguns itens saíram do cardápio. Este favorito não pode ser pedido agora."));
+      const ac = pedMk("div", "pedido__acoes");
+      if (ok) {
+        const pedir = pedMk("button", "pedido__btn", "Pedir"); pedir.type = "button";
+        pedir.addEventListener("click", () => pedirRapido(f.item, f.descricao));
+        ac.appendChild(pedir);
+      }
+      const rem = pedMk("button", "pedido__btn pedido__btn--sec", "Remover"); rem.type = "button";
+      rem.addEventListener("click", async function () {
+        if (!confirm("Remover “" + f.nome + "” dos favoritos?")) return;
+        const { data, error } = await sbCliente.from("favoritos").delete().eq("id", f.id).select("id");
+        if (error || !data || !data.length) { mostrarFavErro("Não foi possível remover. Tente de novo."); return; }
+        favoritos = favoritos.filter(x => x.id !== f.id); renderFavoritos();
+      });
+      ac.appendChild(rem);
+      c.appendChild(ac);
+      return c;
+    }
+    function renderFavoritos() {
+      listaFav.replaceChildren(...favoritos.map(cartaoFavorito));
+      favVazio.hidden = favoritos.length > 0;
+    }
+    async function carregarFavoritos() {
+      if (!sbCliente || !usuarioCliente) return;
+      const { data, error } = await sbCliente.from("favoritos").select("id, nome, descricao, item")
+        .eq("restaurante", CFG.restaurante).order("criado_em", { ascending: false });
+      if (error) { mostrarFavErro("Não foi possível carregar seus favoritos."); return; }
+      mostrarFavErro(""); favoritos = data; renderFavoritos();
+    }
+    function abrirFavoritos(e) {
+      if (e) e.preventDefault();
+      if (!usuarioCliente) return;
+      modalFav.hidden = false; document.body.style.overflow = "hidden";
+      carregarFavoritos();
+    }
+    function fecharFavoritos() {
+      if (modalFav.hidden) return;
+      modalFav.hidden = true; document.body.style.overflow = "";
+    }
+    if (CFG.modo !== "producao") $("#modalFavoritar").style.display = "none";
+    $("#navFavoritos").addEventListener("click", abrirFavoritos);
+    $("#modalFavoritar").addEventListener("click", function () { if (ultimoPedido) salvarFavorito(ultimoPedido.item, ultimoPedido.descricao, this); });
+    modalFav.querySelectorAll(".modal__fechar, .modal__overlay").forEach(b => b.addEventListener("click", fecharFavoritos));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fecharFavoritos(); });
+
+    sbCliente?.auth.onAuthStateChange((event, session) => {
+      usuarioCliente = session?.user ?? null;
+      atualizarNavCliente();
+      setTimeout(sincronizarPedidos, 0); /* fora do callback do Auth, para não travar o cliente */
+    });
+
+    /* Traduz os erros do Supabase Auth (chegam em inglês) para mensagens úteis */
+    function traduzirErroAuth(e) {
+      const txt = (((e && e.code) || "") + " " + ((e && e.message) || "")).toLowerCase();
+      if (/not.?confirmed/.test(txt)) return "Confirme seu e-mail antes de entrar. Verifique a caixa de entrada e o spam.";
+      if (/invalid.?(login|credentials)/.test(txt)) return "E-mail ou senha incorretos.";
+      if (/already.?(registered|exists)|user_already_exists/.test(txt)) return "Este e-mail já está cadastrado. Tente entrar.";
+      if (/not authorized|email_address_not_authorized/.test(txt)) return "Não foi possível enviar o e-mail de confirmação: o envio de e-mails do projeto ainda não está configurado.";
+      if (/rate.?limit|too many|429/.test(txt) || (e && e.status === 429)) return "Muitas tentativas ou limite de e-mails atingido. Aguarde um pouco e tente de novo.";
+      if (/weak_password|at least \d+ characters|should be at least/.test(txt)) return "A senha precisa ter pelo menos 6 caracteres.";
+      if (/failed to fetch|network/.test(txt)) return "Sem conexão com o servidor. Verifique a internet.";
+      return "Não foi possível concluir" + (e && e.message ? " (" + e.message + ")." : ".");
+    }
+
+    async function loginCliente(email, senha) {
+      if (!sbCliente) throw new Error("Supabase não disponível");
+      const { data, error } = await sbCliente.auth.signInWithPassword({ email, password: senha });
+      if (error) {
+        console.error("Supabase login error:", error);
+        throw new Error(traduzirErroAuth(error));
+      }
+      console.log("Supabase login success:", data.user?.email);
+    }
+
+    async function cadastrarCliente(nome, email, senha) {
+      if (!sbCliente) throw new Error("Supabase não disponível");
+      const { data, error } = await sbCliente.auth.signUp({
+        email,
+        password: senha,
+        options: { data: { nome } }
+      });
+      if (error) { console.error("Supabase signUp error:", error); throw new Error(traduzirErroAuth(error)); }
+      /* E-mail já cadastrado: o Supabase não dá erro (para não revelar contas), devolve identities vazio */
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        throw new Error("Este e-mail já está cadastrado. Tente entrar.");
+      }
+      return data;
+    }
+
+    async function logoutCliente() {
+      if (!sbCliente) return;
+      await sbCliente.auth.signOut();
+      usuarioCliente = null;
+      atualizarNavCliente();
+    }
+
+    /* Inicializa sessão do cliente ao carregar */
+    carregarSessaoCliente();
 
     /* máscaras simples */
     campo.tel.addEventListener("input", function () {
@@ -2481,9 +2870,20 @@
     }
     function atualizarTotal() { elTotal.textContent = reais(subtotalAtual + taxaEntrega); }
 
-    function abrirCheckout(app, subtotal) {
-      appAtual = app; subtotalAtual = subtotal; chaveIdem = novaChave(); enviando = false;
+    async function abrirCheckout(app, subtotal) {
+      /* Se não estiver logado, abrir modal de login primeiro */
+      if (!usuarioCliente && CFG.modo === "producao") {
+        const modalLogin = $("#modalLoginCliente");
+        modalLogin.hidden = false;
+        document.body.style.overflow = "hidden";
+        /* Armazena app e subtotal para usar após o login */
+        modalLogin.dataset.appPendente = app;
+        modalLogin.dataset.subtotalPendente = String(subtotal);
+        return;
+      }
+      itemRapido = null; appAtual = app; subtotalAtual = subtotal; chaveIdem = novaChave(); enviando = false;
       resetarOpcoes(); limparErros();
+      if (usuarioCliente && !campo.nome.value.trim()) campo.nome.value = (usuarioCliente.user_metadata && usuarioCliente.user_metadata.nome) || "";
       corpo.hidden = false; sucesso.hidden = true; rodape.hidden = false;
       btnConfirmar.disabled = false; btnConfirmar.textContent = "Confirmar pedido";
       elItens.textContent = linhaDoPedido(app);
@@ -2494,6 +2894,7 @@
       modal.hidden = false; document.body.style.overflow = "hidden";
     }
     function fecharCheckout() {
+      itemRapido = null;
       modal.hidden = true; sucesso.hidden = true; corpo.hidden = false; rodape.hidden = false;
       document.body.style.overflow = "";
     }
@@ -2546,6 +2947,7 @@
 
     /* Monta os itens só com IDs e quantidades — o servidor busca os preços */
     function montarItem(app) {
+      if (itemRapido) return itemRapido;
       const so = (lista, mapa) => { const o = {}; lista.forEach(i => { const n = mapa(i.id) || 0; if (n > 0) o[i.id] = n; }); return o; };
       if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]) };
       if (app === "massa") return {
@@ -2562,7 +2964,10 @@
         restaurante: CFG.restaurante, chave_idempotencia: chaveIdem,
         tipo_entrega: ent ? "entrega" : "retirada", pagamento: formaPagamentoAtual,
         troco_para: formaPagamentoAtual === "dinheiro" && campo.troco.value.trim() ? parseFloat(campo.troco.value.replace(/\./g, "").replace(",", ".")) : null,
-        cliente: { nome: campo.nome.value.trim(), telefone: digitos(campo.tel.value) },
+        cliente: {
+          nome: campo.nome.value.trim(),
+          telefone: digitos(campo.tel.value)
+        },
         endereco: ent ? { rua: campo.rua.value.trim(), numero: campo.numero.value.trim(), bairro: campo.bairro.value.trim(), cep: digitos(campo.cep.value), complemento: campo.comp.value.trim() } : null,
         itens: [montarItem(appAtual)]
       };
@@ -2573,11 +2978,15 @@
         await new Promise(r => setTimeout(r, 500));
         return { numero: estado.pedido, total: subtotalAtual + taxaEntrega, simulado: true };
       }
-      let resp;
+      let resp, token = CFG.anonKey;
+      try {
+        const { data: sess } = await sbCliente.auth.getSession();
+        if (sess && sess.session) token = sess.session.access_token;
+      } catch (e) { }
       try {
         resp = await fetch(CFG.apiUrl.replace(/\/$/, "") + "/functions/v1/create-order", {
           method: "POST",
-          headers: { "Content-Type": "application/json", apikey: CFG.anonKey, Authorization: "Bearer " + CFG.anonKey },
+          headers: { "Content-Type": "application/json", apikey: CFG.anonKey, Authorization: "Bearer " + token },
           body: JSON.stringify(payload)
         });
       } catch (e) { throw new Error("Sem conexão. Verifique sua internet e tente de novo."); }
@@ -2597,12 +3006,17 @@
       }
       enviando = true; btnConfirmar.disabled = true; btnConfirmar.textContent = "Enviando…";
       try {
-        const r = await enviarPedido(montarPayload());
+        const payload = montarPayload();
+        const r = await enviarPedido(payload);
+        ultimoPedido = { item: payload.itens[0], descricao: elItens.textContent };
+        const bf = $("#modalFavoritar");
+        if (bf) { bf.disabled = false; bf.textContent = "☆ Salvar como favorito"; }
         const ent = tipoEntrega() === "entrega";
         const pag = formaPagamentoAtual === "dinheiro" ? "Pagamento em dinheiro" + (ent ? " na entrega." : " na retirada.")
           : formaPagamentoAtual === "pix" ? "Pagamento via Pix — escaneie o QR code." : "Pagamento no cartão de crédito.";
         corpo.hidden = true; rodape.hidden = true; sucesso.hidden = false;
         $("#modalMsgSucesso").textContent = "Pedido #" + String(r.numero).padStart(4, "0") + ". " + (ent ? "Tele entrega." : "Retirada no local.") + " " + pag + " Total: " + reais(Number(r.total));
+        if (CFG.modo !== "producao") $("#modalMsgSucesso").textContent += " (Pedido simulado: não foi enviado a nenhum restaurante.)";
       } catch (e) {
         mostrarErro(e.message); btnConfirmar.disabled = false; btnConfirmar.textContent = "Confirmar pedido";
       } finally { enviando = false; }
@@ -2623,6 +3037,135 @@
     fechar.addEventListener("click", fecharCheckout);
     overlay.addEventListener("click", fecharCheckout);
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) fecharCheckout(); });
+
+    /* ================================================================
+       MODAL DE LOGIN / CADASTRO DO CLIENTE
+       ================================================================ */
+    const modalLogin = $("#modalLoginCliente");
+    const fecharLogin = modalLogin.querySelector(".modal__fechar");
+    const overlayLogin = modalLogin.querySelector(".modal__overlay");
+    const btnEntrarNav = $("#navCliente");
+    const btnSairNav = $("#navSair");
+
+    /* Abrir modal de login pelo nav */
+    btnEntrarNav.addEventListener("click", function (e) {
+      e.preventDefault();
+      modalLogin.hidden = false;
+      document.body.style.overflow = "hidden";
+    });
+
+    /* Fechar modal de login */
+    function fecharModalLogin() {
+      modalLogin.hidden = true;
+      document.body.style.overflow = "";
+    }
+    modalLogin.querySelectorAll(".modal__fechar").forEach(b => b.addEventListener("click", fecharModalLogin));
+
+    /* pedido.html?entrar (link da página de vendas): abre o login se ainda não houver sessão */
+    if (new URLSearchParams(location.search).has("entrar") && CFG.modo === "producao" && sbCliente) {
+      sbCliente.auth.getSession().then(function (r) {
+        if (!r.data.session) { modalLogin.hidden = false; document.body.style.overflow = "hidden"; }
+      });
+    }
+    overlayLogin.addEventListener("click", fecharModalLogin);
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !modalLogin.hidden) fecharModalLogin();
+    });
+
+    /* Trocar entre abas login/cadastro */
+    $$("#modalLoginCliente .auth__tab").forEach(tab => {
+      tab.addEventListener("click", function () {
+        $$("#modalLoginCliente .auth__tab").forEach(t => t.classList.remove("auth__tab--active"));
+        this.classList.add("auth__tab--active");
+        const aba = this.dataset.aba;
+        const mostrarLogin = aba === "login";
+        $("#authLogin").hidden = !mostrarLogin;
+        $("#authCadastro").hidden = mostrarLogin;
+        $("#authLogin").classList.toggle("auth__painel--ativo", mostrarLogin);
+        $("#authCadastro").classList.toggle("auth__painel--ativo", !mostrarLogin);
+        $("#loginErro").hidden = true;
+        $("#cadastroErro").hidden = true;
+      });
+    });
+
+    /* Links "Crie aqui" / "Entrar" dentro do modal */
+    $$("#modalLoginCliente .auth__link").forEach(link => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        const aba = this.dataset.aba;
+        $$("#modalLoginCliente .auth__tab").forEach(t => t.classList.remove("auth__tab--active"));
+        $("#modalLoginCliente .auth__tab[data-aba='" + aba + "']").classList.add("auth__tab--active");
+        const mostrarLogin = aba === "login";
+        $("#authLogin").hidden = !mostrarLogin;
+        $("#authCadastro").hidden = mostrarLogin;
+        $("#authLogin").classList.toggle("auth__painel--ativo", mostrarLogin);
+        $("#authCadastro").classList.toggle("auth__painel--ativo", !mostrarLogin);
+        $("#loginErro").hidden = true;
+        $("#cadastroErro").hidden = true;
+      });
+    });
+
+    /* Se o cliente clicou em "pedir" sem estar logado, retoma o checkout depois de entrar */
+    async function seguirCheckoutPendente() {
+      const appPendente = modalLogin.dataset.appPendente;
+      const subtotalPendente = modalLogin.dataset.subtotalPendente;
+      if (appPendente && subtotalPendente) {
+        delete modalLogin.dataset.appPendente;
+        delete modalLogin.dataset.subtotalPendente;
+        await abrirCheckout(appPendente, parseFloat(subtotalPendente));
+      }
+    }
+
+    /* Submit do form de login */
+    $("#formLoginCliente").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const email = $("#loginEmail").value.trim();
+      const senha = $("#loginSenha").value;
+      $("#loginErro").hidden = true;
+      try {
+        await loginCliente(email, senha);
+        fecharModalLogin();
+        await seguirCheckoutPendente();
+      } catch (err) {
+        $("#loginErro").textContent = err.message || "Erro ao entrar";
+        $("#loginErro").hidden = false;
+      }
+    });
+
+    /* Submit do form de cadastro */
+    $("#formCadastroCliente").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const nome = $("#cadNome").value.trim();
+      const email = $("#cadEmail").value.trim();
+      const senha = $("#cadSenha").value;
+      const senha2 = $("#cadSenha2").value;
+      const cadErro = $("#cadastroErro");
+      const erroCad = msg => { cadErro.style.color = ""; cadErro.textContent = msg; cadErro.hidden = false; };
+      cadErro.hidden = true; cadErro.style.color = "";
+      if (nome.length < 2) return erroCad("Informe seu nome.");
+      if (senha.length < 6) return erroCad("A senha precisa ter pelo menos 6 caracteres.");
+      if (senha !== senha2) return erroCad("As senhas não coincidem.");
+      try {
+        const r = await cadastrarCliente(nome, email, senha);
+        if (r && r.session) { /* confirmação de e-mail desligada: já entrou */
+          fecharModalLogin();
+          await seguirCheckoutPendente();
+          return;
+        }
+        cadErro.style.color = "var(--verde)";
+        cadErro.textContent = "Conta criada! Enviamos um e-mail de confirmação para " + email + ". Confirme e depois entre.";
+        cadErro.hidden = false;
+      } catch (err) {
+        erroCad(err.message || "Erro ao criar conta");
+      }
+    });
+
+    /* Botão Sair no nav */
+    btnSairNav.addEventListener("click", function (e) {
+      e.preventDefault();
+      logoutCliente();
+    });
+
     window.abrirCheckout = abrirCheckout;
   })();
 

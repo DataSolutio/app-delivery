@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PedeAÍ · Demonstração</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='10' fill='%236A2CD8'/><path d='M16 6c-4.4 0-8 3.4-8 7.6 0 5 8 12.4 8 12.4s8-7.4 8-12.4C24 9.4 20.4 6 16 6z' fill='%23C8F04A'/><circle cx='16' cy='13.6' r='3' fill='%236A2CD8'/></svg>">
+  <meta name="description"
+    content="PedeAÍ: o app de pedidos da sua pizzaria e hamburgueria. Monte a pizza, empilhe o lanche, peça.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Geist:wght@400;500;600&family=Geist+Mono&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <nav class="nav">
+    <a class="marca" href="#">
+      <svg class="marca__icone" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="10" class="fundo" />
+        <path d="M16 6c-4.4 0-8 3.4-8 7.6 0 5 8 12.4 8 12.4s8-7.400 8-12.400C24 9.400 20.400 6 16 6z" class="pino" />
+        <circle cx="16" cy="13.600" r="3" class="furo" />
+      </svg>
+      Pede<span class="ai">AÍ</span>
+    </a>
+    <a class="botao botao--pequeno" href="#demos">Testar agora</a>
+    <a id="navCliente" class="botao botao--pequeno botao--fantasma" href="#" style="margin-left:8px">Entrar</a>
+    <a id="navFavoritos" class="botao botao--pequeno botao--fantasma" href="#" style="margin-left:8px;display:none">★ Favoritos</a>
+    <a id="navPedidos" class="botao botao--pequeno botao--fantasma" href="#" style="margin-left:8px;display:none">Meus pedidos</a>
+    <span id="navOla" hidden style="margin-left:8px;font-weight:600"></span>
+    <a id="navSair" class="botao botao--pequeno botao--fantasma" href="#" style="margin-left:8px;display:none">Sair</a>
+  </nav>
+  <p class="rest__faixa rest__faixa--demo">Demonstração: os pedidos feitos aqui são simulados e não chegam a nenhum restaurante. <a href="index.html">Voltar ao início</a></p>
+  <p id="restFaixa" class="rest__faixa" hidden></p>
+
+  <section class="hero">
+    <h1 class="hero__titulo">Monte do seu jeito <span class="destaque">e a gente prepara.</span></h1>
+    <p class="hero__sub">Pizza que se monta com o dedo, lanche que empilha camada por camada. O preço sobe contando,
+      o pedido cai direto na cozinha.</p>
+
+    <!-- Navegação do carrossel -->
+    <div class="carrossel-nav" id="carrosselNav" role="tablist" aria-label="Escolha o pedido">
+      <button class="carrossel-tab carrossel-tab--active" data-alvo="slidePizza" role="tab" aria-selected="true" aria-controls="slidePizza">
+        <span class="carrossel-tab__icone">🍕</span>
+        <span>Pizza</span>
+      </button>
+      <button class="carrossel-tab" data-alvo="slideMassa" role="tab" aria-selected="false" aria-controls="slideMassa">
+        <span class="carrossel-tab__icone">🍝</span>
+        <span>Massas</span>
+      </button>
+      <button class="carrossel-tab" data-alvo="slideLanche" role="tab" aria-selected="false" aria-controls="slideLanche">
+        <span class="carrossel-tab__icone">🍔</span>
+        <span>Hamburger</span>
+      </button>
+    </div>
+
+    <div class="demos demos--carrossel" id="demos">
+      <!-- PIZZA -->
+      <div class="palco" id="slidePizza">
+        <div class="palco__cab"><span class="palco__tipo">Pizza</span><span class="palco__dica">toque para jogar, segure
+            para tirar</span></div>
+        <div class="app" id="appPizza">
+          <div class="app__topo">
+            <div>
+              <div class="app__casa">Pizzaria Demo</div>
+              <div class="app__mesa">Mesa 7</div>
+            </div>
+          </div>
+          <div class="vista">
+            <div class="app__cab">
+              <h2 class="app__titulo">Monte sua pizza</h2>
+              <div class="tamanhos" role="radiogroup" aria-label="Tamanho">
+                <button role="radio" data-tam="P" aria-checked="false">P</button><button role="radio" data-tam="M"
+                  aria-checked="false">M</button><button role="radio" data-tam="G" aria-checked="true">G</button>
+              </div>
+            </div>
+            <div class="pizza" id="pizza">
+              <div class="assador" id="forno">
+                <video class="forno__boca" id="fornoVid" src="imagens/pizza/forno.mp4" muted loop playsinline></video>
+                <video class="forno__fogo" id="fogoVid" src="imagens/pizza/fogo.mp4" muted loop playsinline></video>
+                <div class="forno__brilho" id="brilho"></div>
+              </div>
+              <div class="pizza__anel" id="anel"></div>
+              <div class="pizza__giro" id="pizzaGiro" style="transform:scale(1)">
+                <img class="pizza__base" src="imagens/pizza/pizza-crua.webp" alt="">
+                <img class="pizza__assada" id="assada" src="imagens/pizza/pizza-molho.webp" alt="">
+                <canvas class="pizza__queijo" id="queijoA"></canvas><canvas
+                  class="pizza__queijo pizza__queijo--derretido" id="queijoAd"></canvas>
+                <canvas class="pizza__queijo" id="queijoB"></canvas><canvas
+                  class="pizza__queijo pizza__queijo--derretido" id="queijoBd"></canvas>
+                <div class="pizza__cobertura" id="cobertura">
+                  <canvas class="pizza__molho" id="molho-catupiry"></canvas><canvas class="pizza__molho"
+                    id="molho-cheddar"></canvas>
+                </div>
+              </div>
+            </div>
+            <p class="app__dica" id="dica-pizza" aria-live="polite">Toque num ingrediente para adicionar</p>
+            <div class="ingredientes" id="ingPizza"></div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir" id="pedir-pizza" type="button"><span class="pedir__barra"
+                id="barra-pizza"></span><span id="pedirTexto-pizza">Adicionar ao pedido</span><span class="pedir__preco"
+                id="preco-pizza">R$ 0,00</span></button>
+          </div>
+          <aside class="comanda" id="comanda-pizza" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-pizza"></div>
+            <div class="comanda__itens" id="comandaItens-pizza"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- MASSAS -->
+      <div class="palco palco--massas" id="slideMassa">
+        <div class="palco__cab"><span class="palco__tipo">Massas</span><span class="palco__dica">escolha o molho e os ingredientes</span></div>
+        <div class="app app--massa" id="appMassa">
+          <div class="app__topo app__topo--massa">
+            <div>
+              <div class="app__casa">Cantina da Nonna</div>
+              <div class="app__mesa">Retirada · demonstração</div>
+            </div>
+          </div>
+          <!-- ETAPA RECHEIO -->
+          <div class="vista vista--massa" id="vistaRecheio">
+            <div class="massa__stepper" role="tablist" aria-label="Etapas" id="massaStepper">
+              <div class="massa__step massa__step--active" data-etapa="1"><span class="massa__step-num">1</span><span>Recheio</span></div>
+              <div class="massa__step" data-etapa="2"><span class="massa__step-num">2</span><span>Molho</span></div>
+              <div class="massa__step" data-etapa="3"><span class="massa__step-num">3</span><span>Massa</span></div>
+              <div class="massa__step" data-etapa="4"><span class="massa__step-num">4</span><span>Finalizar</span></div>
+            </div>
+            <div class="massa__cab" id="massaCab">
+              <h2 class="massa__titulo" id="massaTitulo">Escolha o recheio</h2>
+              <p class="massa__sub" id="massaSub">Coloque quantos quiser · 2 toques é dupla</p>
+            </div>
+            <div class="massa__prato-box" id="massaPratoBox">
+              <div class="massa" id="massa">
+                <img class="massa__panela" id="massaPanela" src="imagens/massas/frigideira.webp" alt="Frigideira">
+                <div class="massa__conteudo" id="massaConteudo"></div>
+                <!-- camadas que aparecem nas etapas seguintes -->
+                <img class="massa__camada-molho" id="massaMolhoImg" src="" alt="" hidden>
+                <img class="massa__camada-tipo" id="massaTipoImg" src="" alt="" hidden>
+                <!-- CORREÇÃO: wrapper + canvas do queijo (o app.js procura estes IDs) -->
+                <div class="massa__queijo-wrapper" id="massaQueijoWrapper">
+                  <canvas id="massaQueijoCanvas"></canvas>
+                </div>
+                <!-- CORREÇÃO: o prato final agora fica DENTRO de #massa (antes estava em #massaEtapa4),
+                     para ser posicionado no centro da frigideira -->
+                <div class="massa__prato-pronto" id="massaPratoFinal" hidden>
+                  <img id="massaPratoFinalImg" src="" alt="Prato pronto" class="massa__prato-pronto-img">
+                </div>
+              </div>
+            </div>
+            <p class="massa__legenda" id="massaLegenda">Seu prato aparece aqui</p>
+            <p class="massa__instrucao" id="dica-massa">Toque nas cubas para jogar na frigideira</p>
+            <!-- Etapa 1: grid de ingredientes -->
+            <div id="massaEtapa1">
+              <div class="massa__tabs" id="massaTabs" role="tablist" aria-label="Categorias">
+                <button type="button" class="massa__tab massa__tab--active" data-cat="carnes">Carnes</button>
+                <button type="button" class="massa__tab" data-cat="legumes">Legumes</button>
+                <button type="button" class="massa__tab" data-cat="queijos">Queijos</button>
+                <button type="button" class="massa__tab" data-cat="temperos">Temperos</button>
+              </div>
+              <div class="massa__cubas" id="ingMassa"></div>
+            </div>
+            <!-- Etapa 2: seleção de molho -->
+            <div id="massaEtapa2" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque no molho para adicionar</p>
+              <div class="massa__cubas massa__cubas--molho" id="ingMolho"></div>
+            </div>
+            <!-- Etapa 3: tipo de massa -->
+            <div id="massaEtapa3" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque no tipo de massa</p>
+              <div class="massa__cubas massa__cubas--tipo" id="ingTipoMassa"></div>
+            </div>
+            <!-- Etapa 4: finalizações -->
+            <div id="massaEtapa4" hidden>
+              <p class="massa__sub" style="text-align:center;margin-bottom:12px">Toque para finalizar o prato</p>
+              <div class="massa__cubas massa__cubas--final" id="ingFinal"></div>
+            </div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir pedir--massa" id="pedir-massa" type="button">
+              <span class="pedir__barra" id="barra-massa"></span>
+              <span id="pedirTexto-massa">Próximo: molho →</span>
+              <span class="pedir__preco" id="preco-massa">R$ 29,00</span>
+            </button>
+          </div>
+          <aside class="comanda" id="comanda-massa" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-massa"></div>
+            <div class="comanda__itens" id="comandaItens-massa"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- LANCHE -->
+      <div class="palco palco--lanche" id="slideLanche">
+        <div class="palco__cab"><span class="palco__tipo">Hamburger</span><span class="palco__dica">cada toque empilha
+            uma camada</span></div>
+        <div class="app" id="appLanche">
+          <div class="app__topo">
+            <div>
+              <div class="app__casa">Hamburgueria Demo</div>
+              <div class="app__mesa">Mesa 7</div>
+            </div>
+          </div>
+          <div class="vista">
+            <div class="app__cab">
+              <h2 class="app__titulo">Monte seu hamburger</h2>
+            </div>
+            <div class="lanche" id="lanche">
+              <div class="lanche__pilha" id="pilha"></div>
+              <div class="lanche__chapa" id="chapa"></div>
+              <div class="palito" id="palito" hidden><span class="palito__vara"></span><svg class="palito__bandeira"
+                  viewBox="0 0 40 27">
+                  <path class="pano" d="M0 0h40l-8 13.500L40 27H0z" /><text x="5" y="18" font-size="11"
+                    font-weight="800" class="txt">AÍ</text>
+                </svg></div>
+            </div>
+            <p class="app__dica" id="dica-lanche" aria-live="polite"></p>
+            <div class="paes" id="paes" role="radiogroup" aria-label="Pão"></div>
+            <div class="ingredientes" id="ingLanche" style="margin-top:10px"></div>
+          </div>
+          <div class="app__rodape">
+            <button class="pedir" id="pedir-lanche" type="button"><span class="pedir__barra"
+                id="barra-lanche"></span><span id="pedirTexto-lanche">Adicionar ao pedido</span><span
+                class="pedir__preco" id="preco-lanche">R$ 0,00</span></button>
+          </div>
+          <aside class="comanda" id="comanda-lanche" hidden>
+            <div class="comanda__cab"><span>Cozinha</span><span>agora</span></div>
+            <div class="comanda__num" id="comandaNum-lanche"></div>
+            <div class="comanda__itens" id="comandaItens-lanche"></div>
+            <div class="comanda__pago">✓ Pedido enviado</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+    <!-- Pontinhos indicadores do carrossel -->
+    <div class="carrossel-dots" id="carrosselDots" aria-hidden="true">
+      <span class="carrossel-dot carrossel-dot--active"></span>
+      <span class="carrossel-dot"></span>
+      <span class="carrossel-dot"></span>
+    </div>
+  </section>
+
+  <div class="calor" id="calor"></div>
+  <footer class="rodape"><span>© 2026 PedeAÍ</span><span>Pedidos feitos com PedeAÍ.</span></footer>
+  <!-- Modal de login / cadastro do cliente -->
+  <div id="modalLoginCliente" class="modal" hidden>
+    <div class="modal__overlay"></div>
+    <div class="modal__painel" role="dialog" aria-modal="true" aria-labelledby="modalLoginTitulo">
+      <div class="modal__cab">
+        <h2 class="modal__titulo" id="modalLoginTitulo">Entrar ou criar conta</h2>
+        <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="modal__corpo">
+        <div class="auth__tabs">
+          <button class="auth__tab auth__tab--active" data-aba="login">Entrar</button>
+          <button class="auth__tab" data-aba="cadastro">Criar conta</button>
+        </div>
+
+        <!-- Login -->
+        <div id="authLogin" class="auth__painel auth__painel--ativo">
+          <form id="formLoginCliente" novalidate>
+            <div class="auth__grupo">
+              <label class="auth__label">E-mail</label>
+              <input type="email" id="loginEmail" placeholder="seu@email.com" required autocomplete="email">
+            </div>
+            <div class="auth__grupo">
+              <label class="auth__label">Senha</label>
+              <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <p id="loginErro" class="auth__erro" hidden></p>
+            <button type="submit" class="auth__btn">Entrar</button>
+          </form>
+          <p class="auth__dica">Não tem conta? <span class="auth__link" data-aba="cadastro">Crie aqui</span></p>
+        </div>
+
+        <!-- Cadastro -->
+        <div id="authCadastro" class="auth__painel" hidden>
+          <form id="formCadastroCliente" novalidate>
+            <div class="auth__grupo">
+              <label class="auth__label">Nome completo</label>
+              <input type="text" id="cadNome" placeholder="João Silva" required>
+            </div>
+            <div class="auth__grupo">
+              <label class="auth__label">E-mail</label>
+              <input type="email" id="cadEmail" placeholder="seu@email.com" required autocomplete="email">
+            </div>
+            <div class="auth__grupo">
+              <label class="auth__label">Senha</label>
+              <input type="password" id="cadSenha" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+            </div>
+            <div class="auth__grupo">
+              <label class="auth__label">Confirme a senha</label>
+              <input type="password" id="cadSenha2" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+            </div>
+            <p id="cadastroErro" class="auth__erro" hidden></p>
+            <button type="submit" class="auth__btn">Criar conta</button>
+          </form>
+          <p class="auth__dica">Já tem conta? <span class="auth__link" data-aba="login">Entrar</span></p>
+        </div>
+      </div>
+
+      <div class="modal__rodape">
+        <button class="modal__fechar" type="button">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de checkout / pagamento (simulado, sem backend) -->
+  <div id="modalCheckout" class="modal" hidden>
+    <div class="modal__overlay"></div>
+    <div class="modal__painel" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+      <div class="modal__cab">
+        <h2 class="modal__titulo" id="modalTitulo">Finalizar pedido</h2>
+        <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="modal__corpo">
+        <!-- Resumo -->
+        <div class="modal__resumo">
+          <div class="modal__linha"><span>Itens</span><span id="modalItens">-</span></div>
+          <div class="modal__linha"><span>Subtotal</span><span id="modalSubtotal">R$ 0,00</span></div>
+        </div>
+
+        <!-- Dados do cliente (obrigatórios em retirada e entrega) -->
+        <fieldset class="modal__grupo">
+          <legend>Seus dados</legend>
+          <div class="modal__campos">
+            <input type="text" id="modalNome" placeholder="Seu nome" maxlength="80" autocomplete="name">
+            <input type="tel" id="modalTelefone" placeholder="Telefone (WhatsApp)" maxlength="16" autocomplete="tel" inputmode="tel">
+          </div>
+        </fieldset>
+
+        <!-- Tipo de entrega -->
+        <fieldset class="modal__grupo">
+          <legend>Receber por</legend>
+          <div class="modal__opcoes">
+            <label class="modal__opcao">
+              <input type="radio" name="entrega" value="retirada" checked>
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Retirada no local</span>
+                <span class="modal__opcao__valor">Grátis</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="entrega" value="entrega">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Tele entrega</span>
+                <span class="modal__opcao__valor" id="modalTaxaLabel">+ R$ 8,90</span>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Endereço de entrega (aparece apenas para Tele entrega) -->
+        <fieldset class="modal__grupo" id="modalEndereco" hidden>
+          <legend>Endereço de entrega</legend>
+          <div class="modal__campos">
+            <input type="text" id="modalRua" placeholder="Rua / Avenida" maxlength="80">
+            <input type="text" id="modalNumero" placeholder="Nº" maxlength="10">
+            <input type="text" id="modalBairro" placeholder="Bairro" maxlength="60">
+          </div>
+          <div class="modal__campos">
+            <input type="text" id="modalCep" placeholder="CEP" maxlength="9" inputmode="numeric" autocomplete="postal-code">
+            <input type="text" id="modalComplemento" placeholder="Complemento (opcional)" maxlength="60">
+          </div>
+          <p class="modal__dica">Informe o endereço completo para a entrega.</p>
+        </fieldset>
+
+        <!-- Forma de pagamento -->
+        <fieldset class="modal__grupo">
+          <legend>Pagamento</legend>
+          <div class="modal__opcoes">
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="dinheiro" checked>
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Dinheiro</span>
+                <span class="modal__opcao__valor" id="modalDinheiroSub">Na retirada</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="pix">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Pix</span>
+                <span class="modal__opcao__valor">QR code simulado</span>
+              </div>
+            </label>
+            <label class="modal__opcao">
+              <input type="radio" name="pagamento" value="cartao">
+              <span class="modal__opcao__radio"></span>
+              <div>
+                <span class="modal__opcao__label">Cartão de crédito</span>
+                <span class="modal__opcao__valor">À vista / parcelado</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Troco (só para dinheiro) -->
+          <div id="modalTrocoBox" class="modal__troco">
+            <input type="text" id="modalTroco" placeholder="Troco para quanto? (opcional)" inputmode="decimal" maxlength="10">
+          </div>
+
+          <!-- QR Code Pix (aparece apenas quando Pix selecionado) -->
+          <div id="modalQrPix" class="modal__qrcode" hidden>
+            <div class="qr__box">
+              <canvas id="qrCanvas" width="220" height="220"></canvas>
+              <div class="qr__texto">Chave Pix: loja@pedeai.com.br</div>
+              <div class="qr__sub">Abra a câmera do celular e aponte para o QR code</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Total -->
+        <div class="modal__total">
+          <span>Total</span>
+          <span id="modalTotal">R$ 0,00</span>
+        </div>
+      </div>
+
+      <!-- Rodapé fixo com botão confirmar -->
+      <div class="modal__rodape" id="modalRodape">
+        <p class="modal__erro" id="modalErro" role="alert" hidden></p>
+        <button class="modal__confirmar" type="button">Confirmar pedido</button>
+      </div>
+
+      <!-- Tela de sucesso -->
+      <div class="modal__sucesso" hidden>
+        <div class="modal__check">✓</div>
+        <h3 class="modal__sucesso__titulo">Pedido confirmado!</h3>
+        <p class="modal__sucesso__msg" id="modalMsgSucesso">Seu pedido está a caminho.</p>
+        <button class="modal__novo" type="button">Fazer novo pedido</button>
+        <button class="modal__novo modal__ver" id="modalFavoritar" type="button">☆ Salvar como favorito</button>
+        <button class="modal__novo modal__ver" id="modalVerPedidos" type="button">Acompanhar meus pedidos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: meus pedidos (status em tempo real) -->
+  <div id="modalPedidos" class="modal" hidden>
+    <div class="modal__overlay"></div>
+    <div class="modal__painel" role="dialog" aria-modal="true" aria-labelledby="modalPedidosTitulo">
+      <div class="modal__cab">
+        <h2 class="modal__titulo" id="modalPedidosTitulo">Meus pedidos</h2>
+        <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal__corpo">
+        <p id="pedidosErro" class="pedidos__aviso pedidos__aviso--erro" role="alert" hidden></p>
+        <p id="pedidosVazio" class="pedidos__aviso" hidden>Você ainda não fez nenhum pedido.</p>
+        <div id="pedidosLista" class="pedidos" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: pedidos favoritos -->
+  <div id="modalFavoritos" class="modal" hidden>
+    <div class="modal__overlay"></div>
+    <div class="modal__painel" role="dialog" aria-modal="true" aria-labelledby="modalFavoritosTitulo">
+      <div class="modal__cab">
+        <h2 class="modal__titulo" id="modalFavoritosTitulo">Meus favoritos</h2>
+        <button class="modal__fechar" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal__corpo">
+        <p id="favErro" class="pedidos__aviso pedidos__aviso--erro" role="alert" hidden></p>
+        <p id="favVazio" class="pedidos__aviso" hidden>Você ainda não tem favoritos. Depois de fazer um pedido, toque em “Salvar como favorito”, ou use “☆ Favoritar” em Meus pedidos.</p>
+        <div id="favLista" class="pedidos" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>window.PEDEAI_DEMO = true;</script>
+  <script src="cardapio.js"></script> <!-- busca o cardápio do banco e então carrega o app.js -->
+</body>
+
+</html>

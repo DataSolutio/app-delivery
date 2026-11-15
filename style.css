@@ -2846,3 +2846,180 @@ button {
 .modal__troco { margin-top: 10px; }
 .modal__troco input { width: 100%; }
 .modal__confirmar:disabled { opacity: .6; cursor: progress; }
+
+/* ================================================================
+   LOGIN / CADASTRO DO CLIENTE
+   ================================================================ */
+.botao--fantasma {
+  background: transparent;
+  color: var(--ink-3);
+  border: 1px solid transparent;
+}
+.botao--fantasma:hover {
+  color: var(--uva);
+  border-color: var(--uva-soft);
+}
+
+.auth__tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.auth__tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  font: 600 .9rem var(--font-body);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.auth__tab:hover { color: var(--uva); }
+.auth__tab--active {
+  color: var(--uva);
+  border-bottom-color: var(--uva);
+}
+
+.auth__painel { display: none; }
+.auth__painel--ativo { display: block; }
+
+.auth__grupo {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.auth__label {
+  font-size: .8rem;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.auth__grupo input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font: 400 .9rem var(--font-body);
+  color: var(--ink);
+  box-sizing: border-box;
+}
+.auth__grupo input:focus {
+  outline: 2px solid var(--uva);
+  border-color: var(--uva);
+}
+
+.auth__btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--uva);
+  color: var(--on-uva);
+  font: 700 .95rem var(--font-display);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.auth__btn:hover { background: var(--uva-press); }
+.auth__btn:active { transform: scale(.97); }
+
+.auth__dica {
+  margin-top: 12px;
+  font-size: .85rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+.auth__dica .auth__link {
+  color: var(--uva);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.auth__dica .auth__link:hover { color: var(--uva-press); }
+
+.auth__erro {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fdecea;
+  color: #a12a1b;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+/* Botão sair no nav */
+#navSair.botao--fantasma:hover {
+  color: #a12a1b;
+  border-color: #fdecea;
+}
+
+/* Ajuste mobile para auth */
+@media (max-width: 480px) {
+  .auth__grupo input { font-size: 1rem; } /* evita zoom no iOS */
+}
+
+/* ---- Meus pedidos ---- */
+.modal__sucesso .modal__ver { margin-top: 8px; }
+.pedidos { display: grid; gap: 12px; }
+.pedidos__aviso { margin: 0 0 12px; text-align: center; color: var(--ink-3); font-size: .9rem; }
+.pedidos__aviso--erro { color: #c8402a; font-weight: 600; }
+.pedido { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); }
+.pedido--entregue, .pedido--cancelado { opacity: .75; }
+.pedido__cab { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pedido__num { font: 800 1.1rem var(--font-display); color: var(--ink); }
+.pedido__data { font-size: .8rem; color: var(--ink-3); }
+.pedido__etapas { list-style: none; display: flex; gap: 4px; margin: 12px 0 10px; padding: 0; }
+.pedido__etapas li { flex: 1; padding-top: 8px; border-top: 4px solid var(--line); font-size: .68rem; line-height: 1.2; color: var(--ink-3); text-align: center; }
+.pedido__etapas li.feito { border-top-color: var(--uva); color: var(--ink-2); }
+.pedido__etapas li.atual { border-top-color: var(--uva); color: var(--uva); font-weight: 800; }
+.pedido--pronto .pedido__etapas li.atual, .pedido--entregue .pedido__etapas li.atual { border-top-color: var(--verde); color: var(--verde); }
+.pedido__cancelado { margin: 10px 0; color: #c8402a; font-weight: 700; font-size: .9rem; }
+.pedido__itens { margin: 0 0 10px; padding-left: 18px; font-size: .85rem; color: var(--ink-2); }
+.pedido__rodape { display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px dashed var(--line); font-size: .85rem; color: var(--ink-3); }
+.pedido__rodape strong { color: var(--ink); }
+
+/* ---- Faixa com o nome do restaurante (pedido.html) ---- */
+.rest__faixa { width: min(1120px, calc(100% - 24px)); margin: 10px auto 0; padding: 8px 14px; border-radius: var(--r-pill); background: var(--uva-soft); color: var(--uva); font-weight: 700; font-size: .9rem; text-align: center; }
+.rest__faixa--fechado { background: #fdecea; color: #a12a1b; }
+
+/* ---- Página de vendas (index.html) ---- */
+.lp-sec { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0 0; }
+.lp-hero { padding-top: 64px; text-align: center; }
+.lp-etiqueta { display: inline-block; padding: 5px 14px; border-radius: var(--r-pill); background: var(--lima); color: var(--noite); font-weight: 700; font-size: .8rem; }
+.lp-hero h1 { margin: 16px auto 0; max-width: 20ch; font: 800 clamp(2.2rem, 5vw + .5rem, 4.2rem)/1.02 var(--font-display); letter-spacing: -.035em; text-wrap: balance; }
+.lp-hero p { margin: 16px auto 0; max-width: 54ch; color: var(--ink-2); font-size: 1.05rem; }
+.lp-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 26px; }
+.lp-sec h2 { margin: 0 0 20px; font: 800 clamp(1.5rem, 2.5vw + .5rem, 2.2rem)/1.1 var(--font-display); letter-spacing: -.025em; text-align: center; }
+.lp-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.lp-card { padding: 20px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--card); }
+.lp-card h3 { margin: 6px 0 6px; font: 800 1.1rem var(--font-display); }
+.lp-card p { margin: 0; color: var(--ink-2); font-size: .92rem; }
+.lp-icone { font-size: 1.6rem; }
+.lp-passos { counter-reset: passo; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.lp-passos li { counter-increment: passo; padding: 18px 20px 18px 62px; position: relative; border-radius: var(--r-lg); background: var(--paper-2); color: var(--ink-2); font-size: .95rem; }
+.lp-passos li::before { content: counter(passo); position: absolute; left: 18px; top: 16px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--uva); color: var(--on-uva); font-weight: 800; }
+.lp-passos strong { display: block; color: var(--ink); }
+.lp-cta { margin-bottom: 56px; padding: 36px 24px; border-radius: var(--r-xl); background: var(--noite); color: var(--on-noite); text-align: center; }
+.lp-cta h2 { color: var(--on-noite); margin-bottom: 8px; }
+.lp-cta p { margin: 0 0 20px; color: var(--on-noite-2); }
+.lp-cta .botao { background: var(--lima); color: var(--noite); font-weight: 700; }
+
+.rest__faixa--demo { background: #fff3c4; color: #6b5200; font-weight: 600; }
+.rest__faixa--demo a { color: inherit; text-decoration: underline; }
+
+/* Página de vendas: acessos */
+.lp-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.lp-acesso { display: block; color: inherit; text-decoration: none; transition: transform .15s, border-color .15s; }
+.lp-acesso:hover, .lp-acesso:focus-visible { transform: translateY(-2px); border-color: var(--uva); }
+.lp-acesso__ir { display: inline-block; margin-top: 12px; color: var(--uva); font-weight: 800; font-size: .92rem; }
+@media (prefers-reduced-motion: reduce) { .lp-acesso { transition: none; } .lp-acesso:hover { transform: none; } }
+
+/* ---- Favoritos e ações dos pedidos ---- */
+.pedido__acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pedido__btn { min-height: 44px; padding: 8px 18px; border: 1px solid var(--uva); border-radius: var(--r-pill); background: var(--uva); color: var(--on-uva, #fff); font: 700 .9rem var(--font-body, inherit); cursor: pointer; }
+.pedido__btn--sec { background: var(--paper-2, #f4f0ea); border-color: var(--line); color: var(--ink); }
+.pedido__btn:disabled { opacity: .5; cursor: not-allowed; }
+.fav__desc { margin: 8px 0 0; font-size: .88rem; color: var(--ink-2); }
+.fav--off { opacity: .75; }
