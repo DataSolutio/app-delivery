@@ -66,8 +66,8 @@
       { id: "bacon", nome: "Bacon", preco: 6, n: 12, tam: 0.14 },
       { id: "catupiry", nome: "Catupiry", preco: 6, molho: true },
       { id: "cheddar", nome: "Cheddar", preco: 6, molho: true },
-      { id: "milho", nome: "Milho", preco: 3, n: 48, tam: 0.05, graos: "milho", v: 8 },
-      { id: "ervilha", nome: "Ervilha", preco: 3, n: 44, tam: 0.048, graos: "ervilha", v: 8 },
+      { id: "milho", nome: "Milho", preco: 3, n: 48, tam: 0.04, graos: "grao-milho", v: 8 },
+      { id: "ervilha", nome: "Ervilha", preco: 3, n: 44, tam: 0.04, graos: "grao-ervilha", v: 8 },
       { id: "cogumelo", nome: "Cogumelo", preco: 5, n: 11, tam: 0.145 },
       { id: "azeitona", nome: "Azeitona", preco: 3, n: 16, tam: 0.095 },
       { id: "manjericao", nome: "Manjericão", preco: 2, n: 9, tam: 0.15, folha: true },
@@ -223,13 +223,13 @@
       { id: "lombo", nome: "Lombo defumado", preco: 6, cat: "carnes", arte: "lombo", pasta: "massas", max: 2, muitos: true },
       { id: "costela", nome: "Costela desfiada", preco: 7, cat: "carnes", arte: "costela", pasta: "massas", max: 2, muitos: true },
       /* Legumes */
-      { id: "pimentoes", nome: "Pimentões", preco: 2, cat: "legumes", arte: "pimentao", pasta: "pizza", max: 2 },
-      { id: "brocolis", nome: "Brócolis", preco: 3, cat: "legumes", arte: "brocolis", pasta: "massas", max: 2 },
-      { id: "tomate", nome: "Tomate", preco: 2, cat: "legumes", arte: "tomate", pasta: "pizza", max: 2 },
-      { id: "champignon", nome: "Champignon", preco: 3, cat: "legumes", arte: "cogumelo", pasta: "pizza", max: 2 },
-      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "grao-ervilha", pasta: "massas", max: 2, graos: true },
-      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "grao-milho", pasta: "massas", max: 2, graos: true },
-      { id: "azeitona", nome: "Azeitona", preco: 2, cat: "legumes", arte: "azeitona", pasta: "pizza", max: 2 },
+      { id: "pimentoes", nome: "Pimentões", preco: 2, cat: "legumes", arte: "pimentao", pasta: "pizza", max: 2, tamPx: 28 },
+      { id: "brocolis", nome: "Brócolis", preco: 3, cat: "legumes", arte: "brocolis", pasta: "massas", max: 2, tamPx: 36 },
+      { id: "tomate", nome: "Tomate", preco: 2, cat: "legumes", arte: "tomate", pasta: "pizza", max: 2, tamPx: 34 },
+      { id: "champignon", nome: "Champignon", preco: 3, cat: "legumes", arte: "cogumelo", pasta: "pizza", max: 2, tamPx: 30 },
+      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "grao-ervilha", pasta: "massas", max: 2, graos: true, tamPx: 9 },
+      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "grao-milho", pasta: "massas", max: 2, graos: true, tamPx: 9 },
+      { id: "azeitona", nome: "Azeitona", preco: 2, cat: "legumes", arte: "azeitona", pasta: "pizza", max: 2, tamPx: 16 },
       { id: "palmito", nome: "Palmito", preco: 3, cat: "legumes", arte: "palmito", pasta: "massas", max: 2 },
       { id: "passas", nome: "Uvas passas", preco: 2, cat: "legumes", arte: "passas", pasta: "massas", max: 2 },
       { id: "tomateseco", nome: "Tomate seco", preco: 5, cat: "legumes", arte: "tomateseco", pasta: "massas", max: 2 },
@@ -953,7 +953,9 @@
     pc.style.width = `${100 * l}%`;
     const k = serie++;
     const src = item.graos ? `${IMG_PIZZA}t-${item.graos}-${k % 3}.webp` : arte(item, k);
-    pc.innerHTML = `<div class="pc-sh"></div><div class="pc-art"><img class="rw" src="${src}" alt=""><img class="ck${item.folha ? " ck-folha" : item.derrete ? " ck-creme" : ""}" src="${src}" alt=""></div>`;
+    /* grãos: se o arquivo não estiver na pasta da pizza, tenta a da massa (mesmos arquivos t-grao-*) */
+    const alt = item.graos ? ` onerror="this.onerror=null;this.src='${IMG_MASSA}t-${item.graos}-${k % 3}.webp'"` : "";
+    pc.innerHTML = `<div class="pc-sh"></div><div class="pc-art"><img class="rw" src="${src}" alt=""${alt}><img class="ck${item.folha ? " ck-folha" : item.derrete ? " ck-creme" : ""}" src="${src}" alt=""${alt}></div>`;
     const sombra = pc.firstChild, art = pc.lastChild;
     art.style.transform = `rotate(${giro}deg) scale(${esc})`;
     cobertura.appendChild(pc);
@@ -1740,7 +1742,8 @@
         : pastaDir + "t-" + baseArte + "-" + variante + ".webp";
 
       /* tamanho pequeno para temperos/grãos, médio para carnes, normal para os demais */
-      const tamPeca = item.cat === "temperos" || item.graos ? 5 : item.muitos ? 14 : 28;
+      /* tamPx (opcional, no cadastro do ingrediente) define o tamanho exato em pixels */
+      const tamPeca = item.tamPx || (item.cat === "temperos" || item.graos ? 5 : item.muitos ? 14 : 28);
       const vImg = document.createElement("img");
       vImg.src = imgSrc;
       vImg.onerror = function () { vImg.src = pastaDir + "t-" + baseArte + "-0.webp"; };
@@ -1770,7 +1773,8 @@
           const peca = document.createElement("img");
           peca.src = imgSrc;
           peca.onerror = function () { peca.src = pastaDir + "t-" + baseArte + "-0.webp"; };
-          peca.className = "massa-peca" + (item.cat === "temperos" || item.graos ? " tempero" : "");
+          peca.className = "massa-peca" + (!item.tamPx && (item.cat === "temperos" || item.graos) ? " tempero" : "");
+          if (item.tamPx) { peca.style.width = item.tamPx + "px"; peca.style.height = item.tamPx + "px"; }
           peca.dataset.id = item.id;
           const meio = tamPeca / 2;
           peca.style.left = `calc(50% + ${px.toFixed(1)}px - ${meio.toFixed(1)}px)`;
