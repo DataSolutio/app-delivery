@@ -60,20 +60,39 @@
   const PIZZA = {
     tamanhos: { P: { preco: 34.9, escala: 0.84 }, M: { preco: 42.9, escala: 0.92 }, G: { preco: 49.9, escala: 1 } },
     ingredientes: [
-      { id: "mucarela", nome: "Muçarela", preco: 5, camada: true, arte: "farelo" },
-      { id: "calabresa", nome: "Calabresa", preco: 6, n: 10, tam: 0.16 },
-      { id: "pepperoni", nome: "Pepperoni", preco: 7, n: 10, tam: 0.16 },
-      { id: "bacon", nome: "Bacon", preco: 6, n: 12, tam: 0.14 },
-      { id: "catupiry", nome: "Catupiry", preco: 6, molho: true },
-      { id: "cheddar", nome: "Cheddar", preco: 6, molho: true },
-      { id: "milho", nome: "Milho", preco: 3, n: 48, tam: 0.04, graos: "grao-milho", v: 8 },
-      { id: "ervilha", nome: "Ervilha", preco: 3, n: 44, tam: 0.04, graos: "grao-ervilha", v: 8 },
-      { id: "cogumelo", nome: "Cogumelo", preco: 5, n: 11, tam: 0.145 },
-      { id: "azeitona", nome: "Azeitona", preco: 3, n: 16, tam: 0.095 },
-      { id: "manjericao", nome: "Manjericão", preco: 2, n: 9, tam: 0.15, folha: true },
-      { id: "pimentao", nome: "Pimentão", preco: 3, n: 9, tam: 0.17 },
-      { id: "cebola", nome: "Cebola", preco: 2, n: 11, tam: 0.14 },
-      { id: "tomate", nome: "Tomate", preco: 4, n: 11, tam: 0.155 },
+      /* cat = aba onde o ingrediente aparece: queijos, carnes, legumes ou extras.
+         n = pedaços por porção · tam = tamanho de cada pedaço (fração do diâmetro da pizza) */
+      /* Queijos */
+      { id: "mucarela", nome: "Muçarela", preco: 5, camada: true, arte: "farelo", cat: "queijos" },
+      { id: "catupiry", nome: "Catupiry", preco: 6, molho: true, cat: "queijos" },
+      { id: "cheddar", nome: "Cheddar", preco: 6, molho: true, cat: "queijos" },
+      { id: "parmesao", nome: "Parmesão", preco: 5, n: 16, tam: 0.11, cat: "queijos" },
+      { id: "provolone", nome: "Provolone", preco: 6, n: 12, tam: 0.14, cat: "queijos" },
+      { id: "gorgonzola", nome: "Gorgonzola", preco: 7, n: 10, tam: 0.14, cat: "queijos" },
+      /* Carnes */
+      { id: "calabresa", nome: "Calabresa", preco: 6, n: 10, tam: 0.16, cat: "carnes" },
+      { id: "pepperoni", nome: "Pepperoni", preco: 7, n: 10, tam: 0.16, cat: "carnes" },
+      { id: "bacon", nome: "Bacon", preco: 6, n: 12, tam: 0.14, cat: "carnes" },
+      { id: "presunto", nome: "Presunto", preco: 5, n: 9, tam: 0.16, cat: "carnes" },
+      { id: "frango", nome: "Frango desfiado", preco: 6, n: 12, tam: 0.13, cat: "carnes" },
+      { id: "lombo", nome: "Lombo", preco: 6, n: 9, tam: 0.17, cat: "carnes" },
+      /* Legumes */
+      { id: "milho", nome: "Milho", preco: 3, n: 48, tam: 0.04, graos: "grao-milho", v: 8, cat: "legumes" },
+      { id: "ervilha", nome: "Ervilha", preco: 3, n: 44, tam: 0.04, graos: "grao-ervilha", v: 8, cat: "legumes" },
+      { id: "cogumelo", nome: "Cogumelo", preco: 5, n: 11, tam: 0.145, cat: "legumes" },
+      { id: "azeitona", nome: "Azeitona", preco: 3, n: 16, tam: 0.095, cat: "legumes" },
+      { id: "pimentao", nome: "Pimentão", preco: 3, n: 9, tam: 0.17, cat: "legumes" },
+      { id: "cebola", nome: "Cebola", preco: 2, n: 11, tam: 0.14, cat: "legumes" },
+      { id: "tomate", nome: "Tomate", preco: 4, n: 11, tam: 0.155, cat: "legumes" },
+      { id: "palmito", nome: "Palmito", preco: 4, n: 12, tam: 0.10, cat: "legumes" },
+      /* Extras */
+      { id: "ovo", nome: "Ovo cozido", preco: 3, n: 7, tam: 0.17, cat: "extras" },
+      { id: "tomateseco", nome: "Tomate seco", preco: 5, n: 10, tam: 0.12, cat: "extras" },
+      { id: "manjericao", nome: "Manjericão", preco: 2, n: 9, tam: 0.15, folha: true, cat: "extras" },
+      { id: "oregano", nome: "Orégano", preco: 0, n: 14, tam: 0.075, cat: "extras" },
+      /* Azeites: o frasco desenha um fio fino em zigue-zague (fio: true) */
+      { id: "oleo", nome: "Azeite", preco: 2, molho: true, fio: true, mini: IMG_PIZZA + "t-oleo.webp", cat: "extras" },
+      { id: "oleo-oliva", nome: "Azeite de oliva", preco: 3, molho: true, fio: true, mini: IMG_PIZZA + "t-oleo-oliva.webp", cat: "extras" },
     ],
   };
   const MAX_PORCOES = 2;
@@ -110,6 +129,21 @@
   ];
   Object.keys(PIZZA.tamanhos).forEach(k => { const p = precoDe("pizza.tamanho", k); if (p != null) PIZZA.tamanhos[k].preco = p; });
   aplicarLista(PIZZA.ingredientes, "pizza.ingrediente", { preco: true });
+  /* ---- Sabores prontos ----
+     ings = ingredientes que já vêm no sabor (id: porções) · opc = sugestões de acréscimo.
+     Um sabor só aparece se TODOS os seus ingredientes estiverem no cardápio. */
+  const SABORES = [
+    { id: "calabresa", nome: "Calabresa", ings: { mucarela: 1, calabresa: 1, cebola: 1, azeitona: 1, oregano: 1 }, opc: [] },
+    { id: "portuguesa", nome: "Portuguesa", ings: { mucarela: 1, presunto: 1, ovo: 1, cebola: 1, azeitona: 1, oregano: 1, "oleo-oliva": 1 }, opc: ["ervilha", "milho", "palmito", "pimentao", "bacon"] },
+    { id: "mucarela", nome: "Muçarela", ings: { mucarela: 1, oregano: 1 }, opc: [] },
+    { id: "marguerita", nome: "Marguerita", ings: { mucarela: 1, manjericao: 1, oregano: 1 }, opc: [] },
+    { id: "frango-catupiry", nome: "Frango c/ Catupiry", ings: { frango: 1, catupiry: 1 }, opc: [] },
+    { id: "napolitana", nome: "Napolitana", ings: { mucarela: 1, tomate: 1, parmesao: 1, oregano: 1 }, opc: [] },
+    { id: "quatro-queijos", nome: "Quatro Queijos", ings: { mucarela: 1, catupiry: 1, provolone: 1, gorgonzola: 1 }, opc: ["parmesao", "cheddar"] },
+    { id: "pepperoni", nome: "Pepperoni", ings: { mucarela: 1, pepperoni: 1 }, opc: ["azeitona", "tomateseco", "oregano"] },
+    { id: "bacon", nome: "Bacon", ings: { mucarela: 1, bacon: 1 }, opc: ["azeitona", "tomateseco", "oregano"] },
+  ].filter(sb => Object.keys(sb.ings).every(id => PIZZA.ingredientes.some(i => i.id === id)));
+  SABORES.forEach(sb => { sb.opc = sb.opc.filter(id => PIZZA.ingredientes.some(i => i.id === id)); });
   { const p = precoDe("lanche.base", "base"); if (p != null) LANCHE.base = p; }
   aplicarLista(LANCHE.camadas, "lanche.ingrediente", { preco: true, max: true });
   aplicarLista(PAES, "lanche.pao", { preco: true });
@@ -124,6 +158,7 @@
     massaMolho: "bolonhesa", massaRecipiente: "pote", massaPorcoes: {},
   };
   if (!PAES.some(p => p.id === estado.pao) && PAES.length) estado.pao = PAES[0].id; /* pão padrão indisponível */
+  estado.sabor = null;   /* id do sabor pronto escolhido (null = pizza montada do zero) */
   const pizzaEl = $("#pizza"), giroEl = $("#pizzaGiro"), cobertura = $("#cobertura");
   const dicas = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") };
   const dicaT = {};
@@ -177,7 +212,8 @@
   function linhaDoPedido(app) {
     if (app === "pizza") {
       const it = PIZZA.ingredientes.filter(i => estado.porcoes[i.id]).map(i => i.nome.toLowerCase() + (estado.porcoes[i.id] > 1 ? " ×2" : ""));
-      return `Pizza ${estado.tam}: ${it.length ? it.join(", ") : "só molho"}`;
+      const sabor = rotuloSabor();
+      return `Pizza ${estado.tam}${sabor ? " · " + sabor : ""}: ${it.length ? it.join(", ") : "só molho"}`;
     }
     if (app === "massa") {
       const it = MASSA.ingredientes.filter(i => (estado.massaPorcoes[i.id] || 0) > 0).map(i => i.nome.toLowerCase() + ((estado.massaPorcoes[i.id] || 0) > 1 ? " ×" + (estado.massaPorcoes[i.id] || 0) : ""));
@@ -223,13 +259,13 @@
       { id: "lombo", nome: "Lombo defumado", preco: 6, cat: "carnes", arte: "lombo", pasta: "massas", max: 2, muitos: true },
       { id: "costela", nome: "Costela desfiada", preco: 7, cat: "carnes", arte: "costela", pasta: "massas", max: 2, muitos: true },
       /* Legumes */
-      { id: "pimentoes", nome: "Pimentões", preco: 2, cat: "legumes", arte: "pimentao", pasta: "pizza", max: 2, tamPx: 28 },
-      { id: "brocolis", nome: "Brócolis", preco: 3, cat: "legumes", arte: "brocolis", pasta: "massas", max: 2, tamPx: 36 },
-      { id: "tomate", nome: "Tomate", preco: 2, cat: "legumes", arte: "tomate", pasta: "pizza", max: 2, tamPx: 34 },
-      { id: "champignon", nome: "Champignon", preco: 3, cat: "legumes", arte: "cogumelo", pasta: "pizza", max: 2, tamPx: 30 },
-      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "grao-ervilha", pasta: "massas", max: 2, graos: true, tamPx: 9 },
-      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "grao-milho", pasta: "massas", max: 2, graos: true, tamPx: 9 },
-      { id: "azeitona", nome: "Azeitona", preco: 2, cat: "legumes", arte: "azeitona", pasta: "pizza", max: 2, tamPx: 16 },
+      { id: "pimentoes", nome: "Pimentões", preco: 2, cat: "legumes", arte: "pimentao", pasta: "pizza", max: 2 },
+      { id: "brocolis", nome: "Brócolis", preco: 3, cat: "legumes", arte: "brocolis", pasta: "massas", max: 2 },
+      { id: "tomate", nome: "Tomate", preco: 2, cat: "legumes", arte: "tomate", pasta: "pizza", max: 2 },
+      { id: "champignon", nome: "Champignon", preco: 3, cat: "legumes", arte: "cogumelo", pasta: "pizza", max: 2 },
+      { id: "ervilha", nome: "Ervilha", preco: 2, cat: "legumes", arte: "grao-ervilha", pasta: "massas", max: 2, graos: true, tamPx: 8 },
+      { id: "milho", nome: "Milho", preco: 2, cat: "legumes", arte: "grao-milho", pasta: "massas", max: 2, graos: true, tamPx: 8 },
+      { id: "azeitona", nome: "Azeitona", preco: 2, cat: "legumes", arte: "azeitona", pasta: "pizza", max: 2 },
       { id: "palmito", nome: "Palmito", preco: 3, cat: "legumes", arte: "palmito", pasta: "massas", max: 2 },
       { id: "passas", nome: "Uvas passas", preco: 2, cat: "legumes", arte: "passas", pasta: "massas", max: 2 },
       { id: "tomateseco", nome: "Tomate seco", preco: 5, cat: "legumes", arte: "tomateseco", pasta: "massas", max: 2 },
@@ -252,9 +288,11 @@
     const b = document.createElement("button");
     b.type = "button"; b.className = "chip";
     b.setAttribute("aria-label", "Adicionar " + item.nome);
+    const nomeArte = item.arte || item.id;
+    const fb = ` onerror="this.onerror=null;this.src='${IMG_PIZZA}t-${nomeArte}-0.webp'"`;
     const fotos = item.mini
       ? `<span class="ca ca0 ca-unica"><img src="${item.mini}" alt=""></span>`
-      : `<span class="ca ca1"><img src="${IMG_PIZZA}t-${item.arte || item.id}-1.webp" alt=""></span><span class="ca ca2"><img src="${IMG_PIZZA}t-${item.arte || item.id}-2.webp" alt=""></span><span class="ca ca0"><img src="${IMG_PIZZA}t-${item.arte || item.id}-0.webp" alt=""></span>`;
+      : `<span class="ca ca1"><img src="${IMG_PIZZA}t-${nomeArte}-1.webp" alt=""${fb}></span><span class="ca ca2"><img src="${IMG_PIZZA}t-${nomeArte}-2.webp" alt=""${fb}></span><span class="ca ca0"><img src="${IMG_PIZZA}t-${nomeArte}-0.webp" alt=""></span>`;
     b.innerHTML = `<span class="well"><span class="chip-art">${fotos}</span></span><span class="chip-nome">${item.nome}</span><span class="chip-preco">${item.preco ? "+ " + reais(item.preco) : ""}</span><span class="badge" aria-hidden="true"></span><span class="menos" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg></span>`;
     let seguro, x0 = 0;
     b.addEventListener("pointerdown", e => {
@@ -286,6 +324,7 @@
   function marcar(item, n) {
     item.chip.classList.toggle("on", n > 0);
     $(".badge", item.chip).textContent = n > 1 ? "×" + n : "✓";
+    if (item.cat && PIZZA.ingredientes.includes(item)) atualizarPizzaUI();
   }
   function tremer(item) {
     item.chip.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(-3px)" }, { transform: "translateX(0)" }], { duration: 320 });
@@ -842,11 +881,19 @@
   const CORES = {
     catupiry: { sombra: "rgba(60,35,20,.28)", borda: "#e7dfcf", corpo: "#f7f2e8", brilho: "rgba(255,255,255,.95)" },
     cheddar: { sombra: "rgba(90,40,10,.3)", borda: "#d9822a", corpo: "#f2a640", brilho: "rgba(255,226,160,.95)" },
+    /* azeites: traço translúcido (a pizza aparece por baixo) */
+    "oleo": { sombra: "rgba(120,80,10,.14)", borda: "rgba(214,164,40,.30)", corpo: "rgba(240,196,70,.34)", brilho: "rgba(255,248,214,.85)" },
+    "oleo-oliva": { sombra: "rgba(60,70,5,.16)", borda: "rgba(120,140,20,.32)", corpo: "rgba(160,180,40,.34)", brilho: "rgba(240,250,190,.8)" },
   };
   ["catupiry", "cheddar"].forEach(id => { molhos[id] = { tela: $("#molho-" + id), trilhas: [] }; });
+  ["oleo", "oleo-oliva"].forEach(id => {
+    let tela = $("#molho-" + id);
+    if (!tela) { tela = document.createElement("canvas"); tela.id = "molho-" + id; tela.className = "pizza__molho"; cobertura.appendChild(tela); }
+    molhos[id] = { tela: tela, trilhas: [], fino: true };
+  });
   function desenharMolho(id) {
     const m = molhos[id], t = m.tela.width, c = t / 2, x = m.tela.getContext("2d"), cor = CORES[id];
-    const w = t * 0.036;
+    const w = t * (m.fino ? 0.02 : 0.036);
     x.clearRect(0, 0, t, t);
     x.lineCap = x.lineJoin = "round";
     const caminho = (tr, dx, dy) => {
@@ -904,6 +951,63 @@
     };
     requestAnimationFrame(quadro);
   }
+  /* ---- Azeite: o frasco passa em zigue-zague, deixando um fio fino e translúcido ----
+     PONTA_FRASCO = onde fica o bico na imagem (medido no arquivo: x e y em fração da largura/altura). */
+  const PONTA_FRASCO = { "oleo": { x: 0.062, y: 0.954, h: 1 }, "oleo-oliva": { x: 0.048, y: 0.96, h: 1 } };
+  function azeitar(item, volta) {
+    const m = molhos[item.id], t = queijo.tam;
+    medirQueijo();
+    if (!t) return;
+    const ang = (volta ? Math.PI / 2 : 0) + (Math.random() - 0.5) * 0.35;   /* 2ª porção cruza a 1ª */
+    const K = 7, R = 0.7, N = 520;
+    const base = [], seg = [];
+    let tot = 0;
+    for (let k = 0; k < K; k++) {
+      const y = -0.62 + k * (1.24 / (K - 1)), hw = Math.sqrt(Math.max(0.02, R * R - y * y));
+      base.push(k % 2 ? [hw, y] : [-hw, y], k % 2 ? [-hw, y] : [hw, y]);
+    }
+    for (let i = 1; i < base.length; i++) { const d = Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]); seg.push(d); tot += d; }
+    const ponto = s => {
+      let alvo = s * tot, i = 0;
+      while (i < seg.length - 1 && alvo > seg[i]) { alvo -= seg[i]; i++; }
+      const f = seg[i] ? Math.min(1, alvo / seg[i]) : 0;
+      const u = base[i][0] + (base[i + 1][0] - base[i][0]) * f + 0.008 * Math.sin(s * 70);
+      const v = base[i][1] + (base[i + 1][1] - base[i][1]) * f + 0.012 * Math.sin(s * 90);
+      return [u * Math.cos(ang) - v * Math.sin(ang), u * Math.sin(ang) + v * Math.cos(ang)];
+    };
+    const trilha = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0 };
+    m.trilhas.push(trilha);
+    cobertura.appendChild(m.tela);
+    if (calmo) { trilha.ate = N; desenharMolho(item.id); return; }
+    const bis = document.createElement("img");
+    bis.className = "bisnaga"; bis.alt = ""; bis.src = `${IMG_PIZZA}t-${item.id}.webp`;
+    pizzaEl.appendChild(bis);
+    const larg = pizzaEl.offsetWidth * 0.5;
+    bis.style.width = larg + "px";
+    const P = PONTA_FRASCO[item.id], alt = larg * P.h;
+    const sEsc = escalaGiro(), W = pizzaEl.offsetWidth;
+    const local = (u, v) => [W / 2 + u * (W / 2) * sEsc, W / 2 + v * (W / 2) * sEsc];
+    const posiciona = (u, v, extra = "") => {
+      const [px, py] = local(u, v);
+      bis.style.transform = `translate(${px - P.x * larg}px, ${py - P.y * alt}px) ${extra}`;
+    };
+    const [u0, v0] = ponto(0);
+    posiciona(u0, v0);
+    bis.animate([{ opacity: 0, translate: "60px -80px" }, { opacity: 1, translate: "0 0" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+    const t0 = performance.now() + 240, DUR = 2300;
+    let feito = 0;
+    const quadro = () => {
+      const e = Math.min(1, Math.max(0, (performance.now() - t0) / DUR));
+      const ate = Math.floor(N * e);
+      if (ate > feito) { trilha.ate = ate; desenharMolho(item.id); if (ate % 60 < ate - feito) vibrar(3); }
+      feito = ate;
+      const [u, v] = ponto(e);
+      posiciona(u, v, `rotate(${Math.sin(e * 40) * 1.5}deg)`);
+      if (e < 1) requestAnimationFrame(quadro);
+      else bis.animate([{ opacity: 1, translate: "0 0" }, { opacity: 0, translate: "70px -90px" }], { duration: 280, easing: "ease-in", fill: "forwards" }).onfinish = () => bis.remove();
+    };
+    requestAnimationFrame(quadro);
+  }
   function limparMolho(item, animar) {
     const m = molhos[item.id];
     const zera = () => { m.trilhas = []; m.tela.getContext("2d").clearRect(0, 0, m.tela.width, m.tela.height); };
@@ -954,7 +1058,8 @@
     const k = serie++;
     const src = item.graos ? `${IMG_PIZZA}t-${item.graos}-${k % 3}.webp` : arte(item, k);
     /* grãos: se o arquivo não estiver na pasta da pizza, tenta a da massa (mesmos arquivos t-grao-*) */
-    const alt = item.graos ? ` onerror="this.onerror=null;this.src='${IMG_MASSA}t-${item.graos}-${k % 3}.webp'"` : "";
+    const alt = item.graos ? ` onerror="this.onerror=null;this.src='${IMG_MASSA}t-${item.graos}-${k % 3}.webp'"`
+      : ` onerror="this.onerror=null;this.src='${IMG_PIZZA}t-${item.arte || item.id}-0.webp'"`;
     pc.innerHTML = `<div class="pc-sh"></div><div class="pc-art"><img class="rw" src="${src}" alt=""${alt}><img class="ck${item.folha ? " ck-folha" : item.derrete ? " ck-creme" : ""}" src="${src}" alt=""${alt}></div>`;
     const sombra = pc.firstChild, art = pc.lastChild;
     art.style.transform = `rotate(${giro}deg) scale(${esc})`;
@@ -995,6 +1100,12 @@
   }
 
   /* ---- Adicionar e tirar pizza ---- */
+  /* Centro do botão do ingrediente; se ele está numa aba escondida, usa o centro da grade */
+  function centroChip(item) {
+    let r = item.chip.getBoundingClientRect();
+    if (!r.width) r = $("#ingPizza").getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
   let toques = 0;
   function adicionar(item) {
     if (estado.forno) return;
@@ -1006,8 +1117,9 @@
     precificar("pizza", item.preco);
     dizer(toques === 1 ? "Toque de novo para porção dupla" : n === 1 && item.camada ? "Queijo extra" : "");
     if (item.camada) { espiral(n, false); return; }
+    if (item.fio) { azeitar(item, n); return; }
     if (item.molho) { bisnagar(item, n); return; }
-    const de = { x: item.chip.getBoundingClientRect().left + item.chip.getBoundingClientRect().width / 2, y: item.chip.getBoundingClientRect().top + item.chip.getBoundingClientRect().height / 2 };
+    const de = centroChip(item);
     const passo = item.graos ? 30 : 34;
     lugares(item.n, item).forEach((p, k) => lancar(item, p, de, passo * k, true));
   }
@@ -1022,7 +1134,7 @@
     vibrar(16);
     if (item.molho) { limparMolho(item, true); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
     if (item.camada) { limparQueijo(true); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
-    const alvo = { x: item.chip.getBoundingClientRect().left + item.chip.getBoundingClientRect().width / 2, y: item.chip.getBoundingClientRect().top + item.chip.getBoundingClientRect().height / 2 };
+    const alvo = centroChip(item);
     const g = roda(), s = escalaGiro();
     const sai = estado.pecas.filter(p => p.item === item);
     estado.pecas = estado.pecas.filter(p => p.item !== item);
@@ -1041,6 +1153,133 @@
   }
 
   PIZZA.ingredientes.forEach(item => chip(item, $("#ingPizza"), adicionar, tirar));
+
+  /* ---- Pizza: abas de ingredientes, sabores prontos e rótulo do sabor ---- */
+  const ABAS_PIZZA = [["queijos", "Queijos"], ["carnes", "Carnes"], ["legumes", "Legumes"], ["extras", "Extras"]];
+  let abaPizza = "queijos", saborSeq = 0;
+  const catDe = i => (ABAS_PIZZA.some(a => a[0] === i.cat) ? i.cat : "extras");
+  const nomeIng = id => (PIZZA.ingredientes.find(i => i.id === id) || { nome: id }).nome.toLowerCase();
+  const saborAtual = () => SABORES.find(sb => sb.id === estado.sabor) || null;
+
+  function mostrarAbaPizza() {
+    PIZZA.ingredientes.forEach(i => { i.chip.style.display = catDe(i) === abaPizza ? "" : "none"; });
+    $$(".ing-aba").forEach(b => {
+      const on = b.dataset.cat === abaPizza;
+      b.classList.toggle("ing-aba--ativa", on);
+      b.setAttribute("aria-selected", String(on));
+    });
+  }
+  function montarAbasPizza() {
+    const nav = $("#ingAbas");
+    nav.replaceChildren();
+    const presentes = ABAS_PIZZA.filter(a => PIZZA.ingredientes.some(i => catDe(i) === a[0]));
+    if (!presentes.some(a => a[0] === abaPizza) && presentes.length) abaPizza = presentes[0][0];
+    presentes.forEach(a => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "ing-aba"; b.dataset.cat = a[0]; b.setAttribute("role", "tab");
+      b.innerHTML = a[1] + '<span class="ing-aba__n" hidden></span>';
+      b.addEventListener("click", () => { abaPizza = a[0]; mostrarAbaPizza(); });
+      nav.appendChild(b);
+    });
+    mostrarAbaPizza();
+  }
+
+  /* "Calabresa", "Calabresa + bacon, sem cebola": vai junto no pedido para a cozinha */
+  function rotuloSabor() {
+    const sb = saborAtual();
+    if (!sb) return "";
+    const mais = [], menos = [];
+    PIZZA.ingredientes.forEach(i => {
+      const base = sb.ings[i.id] || 0, atual = estado.porcoes[i.id] || 0;
+      if (atual > base) mais.push(nomeIng(i.id) + (base ? " extra" : ""));
+      if (atual < base) menos.push(nomeIng(i.id));
+    });
+    let t = sb.nome;
+    if (mais.length) t += " + " + mais.join(", ");
+    if (menos.length) t += ", sem " + menos.join(", ");
+    return t.slice(0, 80);
+  }
+
+  function renderSaborInfo() {
+    const info = $("#saborInfo"), sb = saborAtual();
+    $$("#sabores .sabor").forEach(b => b.setAttribute("aria-checked", String((b.dataset.sabor || "") === (sb ? sb.id : ""))));
+    info.replaceChildren();
+    info.hidden = !sb;
+    if (!sb) return;
+    const leva = document.createElement("p");
+    const nome = document.createElement("b");
+    nome.textContent = sb.nome;
+    leva.appendChild(nome);
+    leva.appendChild(document.createTextNode(" · molho de tomate, " + Object.entries(sb.ings).map(([id, q]) => nomeIng(id) + (q > 1 ? " ×" + q : "")).join(", ")));
+    info.appendChild(leva);
+    if (sb.opc.length) {
+      const box = document.createElement("div");
+      box.className = "sabor-opc";
+      const rot = document.createElement("span");
+      rot.textContent = "Opcionais:";
+      box.appendChild(rot);
+      sb.opc.forEach(id => {
+        const it = PIZZA.ingredientes.find(i => i.id === id);
+        if (!it) return;
+        const extra = (estado.porcoes[id] || 0) > (sb.ings[id] || 0);
+        const bt = document.createElement("button");
+        bt.type = "button"; bt.className = "sabor-opc__b" + (extra ? " on" : "");
+        bt.textContent = (extra ? "✓ " : "+ ") + it.nome.toLowerCase() + (it.preco ? " (" + reais(it.preco) + ")" : "");
+        bt.addEventListener("click", () => { adicionar(it); soltarPedido("pizza"); });
+        box.appendChild(bt);
+      });
+      info.appendChild(box);
+    }
+  }
+  function atualizarPizzaUI() {
+    $$(".ing-aba").forEach(b => {
+      const n = PIZZA.ingredientes.filter(i => catDe(i) === b.dataset.cat && (estado.porcoes[i.id] || 0) > 0).length;
+      const sp = $(".ing-aba__n", b);
+      if (sp) { sp.textContent = n || ""; sp.hidden = !n; }
+    });
+    renderSaborInfo();
+  }
+
+  /* Escolher um sabor: limpa a pizza e joga os ingredientes dele, um a um, com as animações de sempre */
+  function aplicarSabor(sb) {
+    if (estado.forno === "assando") return;
+    const meu = ++saborSeq;
+    const reset = PIZZA.ingredientes.some(i => (estado.porcoes[i.id] || 0) > 0) || !!estado.forno;
+    if (reset) montarOutra();
+    if (!sb) { estado.sabor = null; atualizarPizzaUI(); return; }
+    estado.sabor = sb.id;
+    atualizarPizzaUI();
+    let t = reset ? 420 : 60;
+    Object.entries(sb.ings).forEach(([id, q]) => {
+      const it = PIZZA.ingredientes.find(i => i.id === id);
+      for (let k = 0; k < q; k++) { setTimeout(() => { if (meu === saborSeq && it) adicionar(it); }, t); t += 520; }
+    });
+    setTimeout(() => {
+      if (meu !== saborSeq) return;
+      soltarPedido("pizza");
+      dizer(sb.nome + ": toque nos ingredientes para ajustar");
+    }, t + 200);
+  }
+  function montarSabores() {
+    const box = $("#sabores");
+    box.replaceChildren();
+    const pilula = (id, texto) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "sabor"; b.dataset.sabor = id; b.textContent = texto; b.setAttribute("role", "radio");
+      b.addEventListener("click", () => {
+        const sb = SABORES.find(x => x.id === id) || null;
+        if (!sb && !estado.sabor) return;      /* "Do zero" sem sabor escolhido: não apaga a pizza do cliente */
+        aplicarSabor(sb);
+      });
+      box.appendChild(b);
+    };
+    pilula("", "Do zero");
+    SABORES.forEach(sb => pilula(sb.id, sb.nome));
+    $("#saboresBox").hidden = SABORES.length === 0;
+    renderSaborInfo();
+  }
+  montarAbasPizza();
+  montarSabores();
 
   /* ---- Pizza: tamanho ---- */
   $$(".tamanhos button").forEach(b => b.addEventListener("click", () => {
@@ -1155,6 +1394,8 @@
     UI.pizza.comanda.hidden = true;
     soltarPedido("pizza");
     precificar("pizza");
+    estado.sabor = null;
+    atualizarPizzaUI();
     dizer("Toque num ingrediente para adicionar");
   }
   LANCHE.camadas.filter(c => !c.fixo).forEach(c => {
@@ -2953,7 +3194,7 @@
     function montarItem(app) {
       if (itemRapido) return itemRapido;
       const so = (lista, mapa) => { const o = {}; lista.forEach(i => { const n = mapa(i.id) || 0; if (n > 0) o[i.id] = n; }); return o; };
-      if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]) };
+      if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]), sabor: rotuloSabor() };
       if (app === "massa") return {
         tipo: "massa", molho: estado.massaMolho, tipo_massa: estado.massaRecipiente,
         ingredientes: so(MASSA.ingredientes, id => estado.massaPorcoes[id]),

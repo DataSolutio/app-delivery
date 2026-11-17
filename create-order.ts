@@ -114,9 +114,10 @@ Deno.serve(async (req) => {
       if (i?.tipo === "pizza") {
         const tam = unico("pizza.tamanho", i.tamanho, "Tamanho");
         const ing = somaQtds("pizza.ingrediente", i.ingredientes, "Ingredientes");
+        const sabor = texto(i.sabor, 80);   // só um rótulo para a cozinha: não influencia o preço
         return { tipo: "pizza", preco: tam.preco + ing.soma,
-          descricao: `Pizza ${i.tamanho}: ${ing.nomes.length ? ing.nomes.join(", ") : "só molho"}`,
-          config: { tamanho: i.tamanho, ingredientes: ing.limpo } };
+          descricao: `Pizza ${i.tamanho}${sabor ? " · " + sabor : ""}: ${ing.nomes.length ? ing.nomes.join(", ") : "só molho"}`,
+          config: { tamanho: i.tamanho, ingredientes: ing.limpo, ...(sabor ? { sabor } : {}) } };
       }
       if (i?.tipo === "lanche") {
         const base = unico("lanche.base", "base", "Lanche");

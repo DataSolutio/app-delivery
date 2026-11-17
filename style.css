@@ -1783,7 +1783,7 @@ button {
 .demos--carrossel #slidePizza .vista {
   display: grid !important;
   grid-template-columns: 260px 1fr !important;
-  grid-template-rows: auto auto 1fr !important;
+  grid-template-rows: auto auto auto auto 1fr !important;
   gap: 0 20px !important;
   align-items: start !important;
   overflow: visible !important;
@@ -1799,7 +1799,7 @@ button {
 /* Pizza: coluna esquerda, linhas 2-3 */
 .demos--carrossel #slidePizza .pizza {
   grid-column: 1 !important;
-  grid-row: 2 / 4 !important;
+  grid-row: 2 / 6 !important;
   max-width: 260px !important;
   width: 260px !important;
   margin: 4px 0 0 !important;
@@ -1819,7 +1819,7 @@ button {
 /* Ingredientes: coluna direita, linha 3 — 7 cols = 14 itens em 2 linhas */
 .demos--carrossel #slidePizza .ingredientes {
   grid-column: 2 !important;
-  grid-row: 3 !important;
+  grid-row: 5 !important;
   grid-template-columns: repeat(7, 1fr) !important;
   margin: 4px 0 0 !important;
   gap: 0 !important;
@@ -3056,4 +3056,38 @@ button {
 }
 @media (max-width: 380px) {
   .nav .botao { padding: 0 10px; font-size: .8rem; }
+}
+
+/* ================================================================
+   PIZZA: sabores prontos e abas de ingredientes
+   ================================================================ */
+.demos--carrossel #slidePizza .sabores-box { grid-column: 2 !important; grid-row: 3 !important; }
+.demos--carrossel #slidePizza .ing-abas { grid-column: 2 !important; grid-row: 4 !important; }
+.sabores-box { min-width: 0; margin: 6px 0 2px; }
+.sabores { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: thin; }
+.sabor { flex: 0 0 auto; min-height: 34px; padding: 6px 13px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--card); color: var(--ink); font: 700 .72rem var(--font-body, inherit); white-space: nowrap; cursor: pointer; }
+.sabor[aria-checked="true"] { background: var(--uva); border-color: var(--uva); color: var(--on-uva, #fff); }
+.sabor-info { margin: 2px 0 0; font-size: .7rem; line-height: 1.4; color: var(--ink-2); }
+.sabor-info p { margin: 0; }
+.sabor-info b { color: var(--ink); }
+.sabor-opc { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 4px; }
+.sabor-opc > span { font-weight: 700; color: var(--ink-3); }
+.sabor-opc__b { min-height: 28px; padding: 3px 10px; border: 1px dashed var(--uva); border-radius: var(--r-pill); background: transparent; color: var(--uva); font: 700 .68rem var(--font-body, inherit); cursor: pointer; }
+.sabor-opc__b.on { background: var(--uva); border-style: solid; color: var(--on-uva, #fff); }
+
+.ing-abas { display: flex; gap: 4px; margin: 6px 0 2px; }
+.ing-aba { flex: 1 1 0; min-height: 32px; padding: 4px 6px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--card); color: var(--ink-2); font: 700 .7rem var(--font-body, inherit); cursor: pointer; }
+.ing-aba--ativa { background: var(--ink); border-color: var(--ink); color: #fff; }
+.ing-aba__n { display: inline-grid; place-items: center; min-width: 16px; height: 16px; margin-left: 5px; padding: 0 4px; border-radius: 999px; background: var(--uva); color: var(--on-uva, #fff); font-size: .62rem; }
+.ing-aba--ativa .ing-aba__n { background: var(--lima, #C8F04A); color: var(--noite, #1d1233); }
+.sabor:focus-visible, .sabor-opc__b:focus-visible, .ing-aba:focus-visible { outline: 3px solid var(--uva); outline-offset: 2px; }
+
+/* Toque (celular, tablet): alvos de 44 px */
+@media (pointer: coarse) {
+  .sabor, .ing-aba { min-height: 44px; }
+  .sabor-opc__b { min-height: 36px; }
+}
+/* Telas baixas: a coluna de ingredientes rola dentro da vista, sem cortar o botão de pedir */
+@media (min-width: 768px) and (max-height: 800px) {
+  .demos--carrossel #slidePizza .vista { overflow-y: auto !important; }
 }

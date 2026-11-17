@@ -1,0 +1,54 @@
+# PedeAÍ Project Issue Analysis
+
+## Problems Identified:
+
+### 1. "Restaurante não Encontrado" Error
+- **Root Cause**: Naming inconsistency between `pedido.js` and `app.js`
+- `pedido.js` line 38: Uses `restaurants_public` (English) view
+- `app.js` line 2765: Uses `restaurantes_publicos` (Portuguese) table
+- When the restaurant slug from URL doesn't match the view, the order form is hidden
+
+### 2. 404 Error on create-order Function
+- **Root Cause**: Edge Function not deployed or misconfigured
+- The frontend calls `/functions/v1/create-order` but the function returns 404
+- The `create-order.ts` Deno function needs to be deployed to Supabase
+- Requires environment variables: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ALLOWED_ORIGIN`
+
+### 3. Delivery Fee Not Updating in Form
+- **Root Cause**: `carregarRestaurante()` in app.js only updates CFG.taxaEntrega if restaurant is found
+- `config.js` has default `taxaEntrega: 8.9` 
+- If restaurant lookup fails, the default value stays forever and never updates from database
+
+### 4. 403 on Logout Endpoint
+- Secondary issue, likely Supabase session/CORS configuration
+
+## Required Fixes:
+
+1. **Create/fix the `restaurants_public` view** in Supabase (or fix the name mismatch)
+2. **Deploy the create-order Edge Function** with proper environment variables
+3. **Ensure restaurant slug in URL matches a restaurant** in the database
+4. **Verify the delivery fee flow** works correctly from database to form
+
+## How to Fix:
+
+### Step 1: Create the restaurants_public view in Supabase
+Run in Supabase SQL editor:
+```sql
+CREATE OR REPLACE VIEW restaurants_public AS
+SELECT id, slug, nome, taxa_entrega, aberto FROM restaurants;
+```
+
+### Step 2: Deploy the create-order Edge Function
+```bash
+supabase functions deploy create-order
+```
+Or set environment variables in the Supabase dashboard.
+
+### Step 3: Verify restaurant data
+Ensure the `restaurants` table has records with `slug` column matching the URL parameter.
+
+### Step 4: Test the flow
+- Open pedido.html with `?r=seu-slug`
+- Verify restaurant is found
+- Place order and check it goes to kitchen
+- Verify delivery fee updates from database
