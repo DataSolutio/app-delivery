@@ -58,7 +58,8 @@
     }
   }
   const PIZZA = {
-    tamanhos: { P: { preco: 34.9, escala: 0.84 }, M: { preco: 42.9, escala: 0.92 }, G: { preco: 49.9, escala: 1 } },
+    /* sabores = quantos sabores diferentes cabem (a pizza é dividida em fatias iguais: ½, ⅓, ¼) */
+    tamanhos: { P: { preco: 34.9, escala: 0.74, sabores: 1 }, M: { preco: 42.9, escala: 0.83, sabores: 2 }, G: { preco: 49.9, escala: 0.92, sabores: 3 }, GG: { preco: 59.9, escala: 1, sabores: 4 } },
     ingredientes: [
       /* cat = aba onde o ingrediente aparece: queijos, carnes, legumes ou extras.
          n = pedaços por porção · tam = tamanho de cada pedaço (fração do diâmetro da pizza) */
@@ -127,7 +128,16 @@
     { id: "batata", nome: "Batata", preco: 2, base: "b-pao-base", hb: 0.355, topo: "b-pao-batata-topo", ht: 0.537 },
     { id: "parmesao", nome: "Parmesão", preco: 3, base: "b-pao-base", hb: 0.355, topo: "b-pao-parmesao-topo", ht: 0.494 },
   ];
-  Object.keys(PIZZA.tamanhos).forEach(k => { const p = precoDe("pizza.tamanho", k); if (p != null) PIZZA.tamanhos[k].preco = p; });
+  /* Tamanhos: preço e quantidade de sabores (max_qtd) vêm do banco; tamanho que não está no banco some */
+  {
+    const mt = CARD.get("pizza.tamanho");
+    Object.keys(PIZZA.tamanhos).forEach(k => {
+      if (mt && !mt.has(k) && Object.keys(PIZZA.tamanhos).length > 1) { delete PIZZA.tamanhos[k]; return; }
+      const p = precoDe("pizza.tamanho", k); if (p != null) PIZZA.tamanhos[k].preco = p;
+      const r = mt && mt.get(k);
+      if (r && Number.isInteger(r.max_qtd) && r.max_qtd >= 1) PIZZA.tamanhos[k].sabores = Math.min(4, r.max_qtd);
+    });
+  }
   aplicarLista(PIZZA.ingredientes, "pizza.ingrediente", { preco: true });
   /* ---- Sabores prontos ----
      ings = ingredientes que já vêm no sabor (id: porções) · opc = sugestões de acréscimo.
@@ -158,7 +168,11 @@
     massaMolho: "bolonhesa", massaRecipiente: "pote", massaPorcoes: {},
   };
   if (!PAES.some(p => p.id === estado.pao) && PAES.length) estado.pao = PAES[0].id; /* pão padrão indisponível */
-  estado.sabor = null;   /* id do sabor pronto escolhido (null = pizza montada do zero) */
+  /* Vários sabores: k fatias iguais. Cada fatia tem seu sabor e suas porções;
+     estado.porcoes sempre aponta para as porções da fatia ativa (setorAtivo). */
+  estado.k = 1; estado.setorAtivo = 0; estado.ocupado = false;
+  estado.setores = [{ sabor: null, porcoes: estado.porcoes }];
+  if (!PIZZA.tamanhos[estado.tam]) estado.tam = Object.keys(PIZZA.tamanhos).slice(-1)[0];
   const pizzaEl = $("#pizza"), giroEl = $("#pizzaGiro"), cobertura = $("#cobertura");
   const dicas = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") };
   const dicaT = {};
@@ -171,7 +185,8 @@
     };
   });
   function total(app) {
-    if (app === "pizza") return PIZZA.tamanhos[estado.tam].preco + PIZZA.ingredientes.reduce((s, i) => s + estado.porcoes[i.id] * i.preco, 0);
+    /* Vários sabores: cobra-se o tamanho + o sabor mais caro (a mesma regra vale no servidor) */
+    if (app === "pizza") return PIZZA.tamanhos[estado.tam].preco + Math.max(...estado.setores.map(st => PIZZA.ingredientes.reduce((s, i) => s + (st.porcoes[i.id] || 0) * i.preco, 0)));
     if (app === "massa") return MASSA.base + MASSA.ingredientes.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0) + FINALIZACOES.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0);
     return LANCHE.base + PAES.find(p => p.id === estado.pao).preco + LANCHE.camadas.filter(c => !c.fixo).reduce((s, c) => s + (estado.lanche.get(c.id) || 0) * c.preco, 0);
   }
@@ -211,6 +226,7 @@
   }
   function linhaDoPedido(app) {
     if (app === "pizza") {
+      if (estado.k > 1) return descricaoMulti();
       const it = PIZZA.ingredientes.filter(i => estado.porcoes[i.id]).map(i => i.nome.toLowerCase() + (estado.porcoes[i.id] > 1 ? " ×2" : ""));
       const sabor = rotuloSabor();
       return `Pizza ${estado.tam}${sabor ? " · " + sabor : ""}: ${it.length ? it.join(", ") : "só molho"}`;
@@ -808,12 +824,15 @@
       x.restore();
     });
   }
-  function pincelar(u, v, camada, forca) {
+  function pincelar(u, v, camada, forca, cunha) {
     const t = queijo.tam;
     if (!t) return;
     const c = queijo.camadas[camada], x = c.mascara.getContext("2d"), m = t / 2;
     x.save();
-    x.beginPath(); x.arc(m, m, 0.8 * m, 0, Math.PI * 2); x.clip();
+    x.beginPath();
+    if (cunha && cunha.k > 1) { x.moveTo(m, m); x.arc(m, m, 0.8 * m, cunha.a0, cunha.a1); x.closePath(); }
+    else x.arc(m, m, 0.8 * m, 0, Math.PI * 2);
+    x.clip();
     for (let k = 0; k < 16; k++) {
       const a = Math.PI * 2 * Math.random();
       const d = 0.36 * Math.abs((Math.random() + Math.random() + Math.random()) / 3 - 0.5);
@@ -844,10 +863,10 @@
       ], { duration: 380, easing: "ease-in" }).onfinish = () => f.remove();
     }
   }
-  function espiral(camada, instantaneo) {
+  function espiral(camada, instantaneo, cunha) {
     medirQueijo();
     const passo = (k) => { const s = k / 72, a = s * Math.PI * 6.4, r = 0.08 + 0.64 * s; return [Math.cos(a) * r, Math.sin(a) * r]; };
-    if (instantaneo || calmo) { for (let k = 0; k < 72; k++) { const [u, v] = passo(k); pincelar(u, v, camada, 1.1); } return; }
+    if (instantaneo || calmo) { for (let k = 0; k < 72; k++) { const [u, v] = passo(k); pincelar(u, v, camada, 1.1, cunha); } return; }
     const t0 = performance.now(), g = roda();
     let feito = 0;
     const quadro = () => {
@@ -855,8 +874,8 @@
       const ate = Math.floor(72 * e);
       for (let k = feito; k < ate; k++) {
         const [u, v] = passo(k);
-        pincelar(u, v, camada, 1.1);
-        if (k % 3 === 0) farelos(g.cx + u * g.R, g.cy + v * g.R - 20);
+        pincelar(u, v, camada, 1.1, cunha);
+        if (k % 3 === 0 && dentroDaCunha(u, v, cunha)) farelos(g.cx + u * g.R, g.cy + v * g.R - 20);
       }
       feito = ate;
       if (e < 1) requestAnimationFrame(quadro);
@@ -909,7 +928,7 @@
     passada(cor.corpo, w * 0.78, -w * 0.04, -w * 0.06);
     passada(cor.brilho, w * 0.22, -w * 0.16, -w * 0.2);
   }
-  function bisnagar(item, volta) {
+  function bisnagar(item, volta, cunha) {
     const m = molhos[item.id], t = queijo.tam;
     medirQueijo();
     if (!t) return;
@@ -917,8 +936,9 @@
     const meio = item.id === "cheddar" ? 0.045 : 0;
     const r0 = (volta ? 0.6 : 0.66) - meio, r1 = (volta ? 0.14 : 0.08) + meio, voltas = 3.1;
     const N = 440;
-    const ponto = s => { const a = giro0 + s * Math.PI * 2 * voltas, r = r0 - (r0 - r1) * s + 0.012 * Math.sin(a * 7); return [Math.cos(a) * r, Math.sin(a) * r]; };
-    const trilha = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0 };
+    const pontoEsp = s => { const a = giro0 + s * Math.PI * 2 * voltas, r = r0 - (r0 - r1) * s + 0.012 * Math.sin(a * 7); return [Math.cos(a) * r, Math.sin(a) * r]; };
+    const ponto = (cunha && cunha.k > 1) ? pontoDaLista(varrerSetor(cunha, 3, 0.62, 0.2)) : pontoEsp;
+    const trilha = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0, setor: cunha ? cunha.i : 0 };
     m.trilhas.push(trilha);
     cobertura.appendChild(m.tela);
     if (calmo) { trilha.ate = N; desenharMolho(item.id); return; }
@@ -954,7 +974,7 @@
   /* ---- Azeite: o frasco passa em zigue-zague, deixando um fio fino e translúcido ----
      PONTA_FRASCO = onde fica o bico na imagem (medido no arquivo: x e y em fração da largura/altura). */
   const PONTA_FRASCO = { "oleo": { x: 0.062, y: 0.954, h: 1 }, "oleo-oliva": { x: 0.048, y: 0.96, h: 1 } };
-  function azeitar(item, volta) {
+  function azeitar(item, volta, cunha) {
     const m = molhos[item.id], t = queijo.tam;
     medirQueijo();
     if (!t) return;
@@ -967,7 +987,7 @@
       base.push(k % 2 ? [hw, y] : [-hw, y], k % 2 ? [-hw, y] : [hw, y]);
     }
     for (let i = 1; i < base.length; i++) { const d = Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]); seg.push(d); tot += d; }
-    const ponto = s => {
+    const pontoZig = s => {
       let alvo = s * tot, i = 0;
       while (i < seg.length - 1 && alvo > seg[i]) { alvo -= seg[i]; i++; }
       const f = seg[i] ? Math.min(1, alvo / seg[i]) : 0;
@@ -975,7 +995,8 @@
       const v = base[i][1] + (base[i + 1][1] - base[i][1]) * f + 0.012 * Math.sin(s * 90);
       return [u * Math.cos(ang) - v * Math.sin(ang), u * Math.sin(ang) + v * Math.cos(ang)];
     };
-    const trilha = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0 };
+    const ponto = (cunha && cunha.k > 1) ? pontoDaLista(varrerSetor(cunha, 6, 0.66, 0.12)) : pontoZig;
+    const trilha = { pts: Array.from({ length: N + 1 }, (_, i) => ponto(i / N)), ate: 0, setor: cunha ? cunha.i : 0 };
     m.trilhas.push(trilha);
     cobertura.appendChild(m.tela);
     if (calmo) { trilha.ate = N; desenharMolho(item.id); return; }
@@ -1038,7 +1059,103 @@
     }
     return pts;
   }
+  /* ---- Vários sabores: geometria das fatias ----
+     Fatia i de k começa no topo da pizza e segue no sentido horário. Coordenadas (u, v) como no resto
+     do código: u = cos(a), v = sin(a), com v positivo para baixo. */
+  const TAU = Math.PI * 2;
+  const FRAC = { 1: "", 2: "½", 3: "⅓", 4: "¼" }, NOME_FRAC = { 2: "Metade", 3: "Terço", 4: "Quarto" };
+  const geomSetor = (i, k) => ({ i: i, k: k, a0: -Math.PI / 2 + i * TAU / k, a1: -Math.PI / 2 + (i + 1) * TAU / k });
+  const geomAtiva = () => geomSetor(estado.setorAtivo, estado.k);
+  /* distância do ponto às duas bordas da fatia (em unidades do raio); sem fatias: infinito */
+  function distBordas(u, v, g) {
+    if (g.k === 1) return 9;
+    const d = a => { const ex = Math.cos(a), ey = Math.sin(a); return (u * ex + v * ey) <= 0 ? Math.hypot(u, v) : Math.abs(u * ey - v * ex); };
+    return Math.min(d(g.a0), d(g.a1));
+  }
+  function dentroDaCunha(u, v, g) {
+    if (!g || g.k === 1) return true;
+    let rel = (Math.atan2(v, u) - g.a0) % TAU;
+    if (rel < 0) rel += TAU;
+    return rel <= (g.a1 - g.a0);
+  }
+  /* percurso em arcos concentricos dentro da fatia (para bisnaga e frasco de azeite) */
+  function varrerSetor(g, aneis, rMax, rMin) {
+    const pts = [];
+    for (let j = 0; j < aneis; j++) {
+      const r = rMax - (rMax - rMin) * (aneis === 1 ? 0 : j / (aneis - 1));
+      const m = Math.asin(Math.min(1, 0.07 / r));
+      let a0 = g.a0 + m, a1 = g.a1 - m;
+      if (a1 <= a0) a0 = a1 = (g.a0 + g.a1) / 2;
+      const n = Math.max(2, Math.ceil((a1 - a0) / 0.04));
+      for (let q = 0; q <= n; q++) { const f = q / n, a = j % 2 ? a1 - (a1 - a0) * f : a0 + (a1 - a0) * f; pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+    }
+    return pts;
+  }
+  function pontoDaLista(pts) {
+    const seg = []; let tot = 0;
+    for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); tot += d; }
+    return s => {
+      let alvo = Math.min(1, Math.max(0, s)) * tot, i = 0;
+      while (i < seg.length - 1 && alvo > seg[i]) { alvo -= seg[i]; i++; }
+      const f = seg[i] ? Math.min(1, alvo / seg[i]) : 0;
+      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f];
+    };
+  }
+  /* pedaços de um ingrediente dentro de UMA fatia, sem passar da borda e sem sobrepor o que já está lá */
+  function lugaresSetor(n, item, g) {
+    const lim = limite(item), margem = item.tam * 0.8 + 0.025, M = Math.max(260, n * 14), cand = [];
+    for (let j = 0; j < M; j++) {
+      const r = lim * Math.sqrt((j + 0.5) / M), a = g.a0 + (g.a1 - g.a0) * ((j * 0.6180339887 + Math.random() * 0.2) % 1);
+      const u = Math.cos(a) * r, v = Math.sin(a) * r;
+      if (distBordas(u, v, g) >= margem) cand.push({ u: u, v: v });
+    }
+    for (let j = cand.length - 1; j > 0; j--) { const q = Math.floor(Math.random() * (j + 1)); const t = cand[j]; cand[j] = cand[q]; cand[q] = t; }
+    const alvoN = Math.max(2, Math.round(n / g.k)), esc = [];
+    for (let c = 0; c < alvoN && cand.length; c++) {
+      let melhor = 0, nota = -Infinity;
+      for (let j = 0; j < cand.length; j++) {
+        const f = Math.min(item.tam, folgaEm(cand[j].u, cand[j].v, item, esc));
+        if (f > nota) { nota = f; melhor = j; }
+      }
+      esc.push(cand[melhor]); cand.splice(melhor, 1);
+    }
+    return esc;
+  }
+  function limparMolhoSetor(item, i) {
+    if (estado.k === 1) return limparMolho(item, true);
+    const m = molhos[item.id];
+    m.trilhas = m.trilhas.filter(tr => tr.setor !== i);
+    desenharMolho(item.id);
+  }
+  function limparQueijoSetor(i) {
+    if (estado.k === 1) return limparQueijo(true);
+    const t = queijo.tam;
+    if (!t) return;
+    const g = geomSetor(i, estado.k), m = t / 2;
+    queijo.camadas.forEach(c => {
+      const x = c.mascara.getContext("2d");
+      x.save(); x.beginPath(); x.moveTo(m, m); x.arc(m, m, m * 0.95, g.a0, g.a1); x.closePath(); x.clip(); x.clearRect(0, 0, t, t); x.restore();
+      desenharQueijo(c, true);
+    });
+  }
+  /* esvazia uma fatia (peças, queijo, molhos e azeites dela) sem mexer nas outras */
+  function limparSetor(i) {
+    const st = estado.setores[i], antes = total("pizza");
+    const sai = estado.pecas.filter(p => p.setor === i);
+    estado.pecas = estado.pecas.filter(p => p.setor !== i);
+    sai.forEach((p, idx) => {
+      if (calmo) { p.el.remove(); return; }
+      p.el.animate([{ transform: "translate(0, 0) scale(1)", opacity: 1 }, { transform: "translate(0, -18px) scale(0)", opacity: 0 }], { duration: 260, delay: 7 * idx, easing: "ease-in", fill: "forwards" }).onfinish = () => p.el.remove();
+    });
+    limparQueijoSetor(i);
+    PIZZA.ingredientes.filter(x => x.molho).forEach(x => { if ((st.porcoes[x.id] || 0) > 0) limparMolhoSetor(x, i); });
+    PIZZA.ingredientes.forEach(x => { st.porcoes[x.id] = 0; });
+    st.sabor = null;
+    if (i === estado.setorAtivo) PIZZA.ingredientes.forEach(x => marcar(x, 0));
+    precificar("pizza", total("pizza") - antes);
+  }
   function lugares(n, item) {
+    if (estado.k > 1) return lugaresSetor(n, item, geomAtiva());
     let melhor = [], nota = -Infinity;
     for (let t = 0; t < 12; t++) {
       const pts = girassol(n, item, Math.random());
@@ -1064,7 +1181,7 @@
     const sombra = pc.firstChild, art = pc.lastChild;
     art.style.transform = `rotate(${giro}deg) scale(${esc})`;
     cobertura.appendChild(pc);
-    const peca = { el: pc, art, u: alvo.u, v: alvo.v, item, r: giro, sc: esc };
+    const peca = { el: pc, art, u: alvo.u, v: alvo.v, item, r: giro, sc: esc, setor: estado.setorAtivo };
     const derreter = () => {
       if (!pc.isConnected) return;
       const de0 = `rotate(${peca.r}deg) scale(${peca.sc})`;
@@ -1111,14 +1228,15 @@
     if (estado.forno) return;
     const n = estado.porcoes[item.id];
     if (n >= MAX_PORCOES) { tremer(item); dizer("Duas porções é o máximo"); return; }
+    const antesTotal = total("pizza");
     estado.porcoes[item.id] = n + 1;
     toques++;
     marcar(item, n + 1);
-    precificar("pizza", item.preco);
+    precificar("pizza", total("pizza") - antesTotal);
     dizer(toques === 1 ? "Toque de novo para porção dupla" : n === 1 && item.camada ? "Queijo extra" : "");
-    if (item.camada) { espiral(n, false); return; }
-    if (item.fio) { azeitar(item, n); return; }
-    if (item.molho) { bisnagar(item, n); return; }
+    if (item.camada) { espiral(n, false, geomAtiva()); return; }
+    if (item.fio) { azeitar(item, n, geomAtiva()); return; }
+    if (item.molho) { bisnagar(item, n, geomAtiva()); return; }
     const de = centroChip(item);
     const passo = item.graos ? 30 : 34;
     lugares(item.n, item).forEach((p, k) => lancar(item, p, de, passo * k, true));
@@ -1132,12 +1250,12 @@
     marcar(item, 0);
     precificar("pizza", total("pizza") - antes);
     vibrar(16);
-    if (item.molho) { limparMolho(item, true); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
-    if (item.camada) { limparQueijo(true); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
+    if (item.molho) { limparMolhoSetor(item, estado.setorAtivo); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
+    if (item.camada) { limparQueijoSetor(estado.setorAtivo); dizer(estado.pecas.length ? "" : "Toque num ingrediente para adicionar"); return; }
     const alvo = centroChip(item);
     const g = roda(), s = escalaGiro();
-    const sai = estado.pecas.filter(p => p.item === item);
-    estado.pecas = estado.pecas.filter(p => p.item !== item);
+    const sai = estado.pecas.filter(p => p.item === item && p.setor === estado.setorAtivo);
+    estado.pecas = estado.pecas.filter(p => !(p.item === item && p.setor === estado.setorAtivo));
     sai.forEach((p, k) => {
       if (calmo) { p.el.remove(); return; }
       const bx = g.cx + p.u * g.R, by = g.cy + p.v * g.R;
@@ -1154,12 +1272,16 @@
 
   PIZZA.ingredientes.forEach(item => chip(item, $("#ingPizza"), adicionar, tirar));
 
-  /* ---- Pizza: abas de ingredientes, sabores prontos e rótulo do sabor ---- */
+  /* ---- Pizza: abas de ingredientes, sabores prontos e vários sabores por pizza ---- */
   const ABAS_PIZZA = [["queijos", "Queijos"], ["carnes", "Carnes"], ["legumes", "Legumes"], ["extras", "Extras"]];
   let abaPizza = "queijos", saborSeq = 0;
   const catDe = i => (ABAS_PIZZA.some(a => a[0] === i.cat) ? i.cat : "extras");
   const nomeIng = id => (PIZZA.ingredientes.find(i => i.id === id) || { nome: id }).nome.toLowerCase();
-  const saborAtual = () => SABORES.find(sb => sb.id === estado.sabor) || null;
+  const temIng = st => PIZZA.ingredientes.some(i => (st.porcoes[i.id] || 0) > 0);
+  const saborDoSetor = i => { const st = estado.setores[i]; return st ? (SABORES.find(sb => sb.id === st.sabor) || null) : null; };
+  const saborAtual = () => saborDoSetor(estado.setorAtivo);
+  const nomeSetor = i => (estado.k === 1 ? "pizza" : NOME_FRAC[estado.k] + " " + (i + 1));
+  const maxSabores = () => (PIZZA.tamanhos[estado.tam] || {}).sabores || 1;
 
   function mostrarAbaPizza() {
     PIZZA.ingredientes.forEach(i => { i.chip.style.display = catDe(i) === abaPizza ? "" : "none"; });
@@ -1184,20 +1306,31 @@
     mostrarAbaPizza();
   }
 
-  /* "Calabresa", "Calabresa + bacon, sem cebola": vai junto no pedido para a cozinha */
-  function rotuloSabor() {
-    const sb = saborAtual();
+  /* "Calabresa", "Calabresa + bacon, sem cebola": rótulo de UMA fatia, vai junto no pedido */
+  function rotuloSetor(i) {
+    const st = estado.setores[i], sb = saborDoSetor(i);
     if (!sb) return "";
     const mais = [], menos = [];
-    PIZZA.ingredientes.forEach(i => {
-      const base = sb.ings[i.id] || 0, atual = estado.porcoes[i.id] || 0;
-      if (atual > base) mais.push(nomeIng(i.id) + (base ? " extra" : ""));
-      if (atual < base) menos.push(nomeIng(i.id));
+    PIZZA.ingredientes.forEach(x => {
+      const base = sb.ings[x.id] || 0, atual = st.porcoes[x.id] || 0;
+      if (atual > base) mais.push(nomeIng(x.id) + (base ? " extra" : ""));
+      if (atual < base) menos.push(nomeIng(x.id));
     });
     let t = sb.nome;
     if (mais.length) t += " + " + mais.join(", ");
     if (menos.length) t += ", sem " + menos.join(", ");
     return t.slice(0, 80);
+  }
+  function rotuloSabor() {
+    if (estado.k === 1) return rotuloSetor(0);
+    return estado.setores.map((st, i) => FRAC[estado.k] + " " + (rotuloSetor(i) || "personalizado")).join(" | ").slice(0, 160);
+  }
+  function listaDoSetor(st) {
+    return PIZZA.ingredientes.filter(i => (st.porcoes[i.id] || 0) > 0).map(i => i.nome.toLowerCase() + (st.porcoes[i.id] > 1 ? " ×" + st.porcoes[i.id] : "")).join(", ");
+  }
+  function descricaoMulti() {
+    return `Pizza ${estado.tam} (${estado.k} sabores): ` + estado.setores.map((st, i) =>
+      FRAC[estado.k] + " " + (rotuloSetor(i) || "personalizado") + " [" + (listaDoSetor(st) || "vazio") + "]").join("; ");
   }
 
   function renderSaborInfo() {
@@ -1208,7 +1341,7 @@
     if (!sb) return;
     const leva = document.createElement("p");
     const nome = document.createElement("b");
-    nome.textContent = sb.nome;
+    nome.textContent = (estado.k > 1 ? FRAC[estado.k] + " " : "") + sb.nome;
     leva.appendChild(nome);
     leva.appendChild(document.createTextNode(" · molho de tomate, " + Object.entries(sb.ings).map(([id, q]) => nomeIng(id) + (q > 1 ? " ×" + q : "")).join(", ")));
     info.appendChild(leva);
@@ -1238,26 +1371,123 @@
       if (sp) { sp.textContent = n || ""; sp.hidden = !n; }
     });
     renderSaborInfo();
+    if (estado.k > 1) renderSetoresUI();
   }
 
-  /* Escolher um sabor: limpa a pizza e joga os ingredientes dele, um a um, com as animações de sempre */
+  /* ---- Fatias: quantidade de sabores, fatia ativa e cortes desenhados sobre a pizza ---- */
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function desenharCortes() {
+    let svg = $("#pizzaCortes");
+    if (!svg) {
+      svg = document.createElementNS(SVGNS, "svg");
+      svg.id = "pizzaCortes"; svg.setAttribute("class", "pizza__cortes"); svg.setAttribute("viewBox", "-1 -1 2 2"); svg.setAttribute("aria-hidden", "true");
+      giroEl.appendChild(svg);
+    }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.style.display = estado.k > 1 ? "" : "none";
+    if (estado.k === 1) return;
+    const R = 0.97;
+    const add = (tag, attrs) => { const n = document.createElementNS(SVGNS, tag); Object.keys(attrs).forEach(a => n.setAttribute(a, attrs[a])); svg.appendChild(n); return n; };
+    const ga = geomSetor(estado.setorAtivo, estado.k);
+    add("path", { d: `M0 0 L${Math.cos(ga.a0) * R} ${Math.sin(ga.a0) * R} A${R} ${R} 0 ${ga.a1 - ga.a0 >= Math.PI ? 1 : 0} 1 ${Math.cos(ga.a1) * R} ${Math.sin(ga.a1) * R} Z`, "class": "pizza__cunha" });
+    for (let i = 0; i < estado.k; i++) { const g = geomSetor(i, estado.k); add("line", { x1: 0, y1: 0, x2: Math.cos(g.a0) * R, y2: Math.sin(g.a0) * R, "class": "pizza__corte" }); }
+    estado.setores.forEach((st, i) => {
+      if (temIng(st)) return;           /* o número só aparece nas fatias ainda vazias */
+      const g = geomSetor(i, estado.k), am = (g.a0 + g.a1) / 2, cx = Math.cos(am) * 0.5, cy = Math.sin(am) * 0.5;
+      add("circle", { cx: cx, cy: cy, r: 0.11, "class": "pizza__num-fundo" });
+      add("text", { x: cx, y: cy, "class": "pizza__num" }).textContent = String(i + 1);
+    });
+  }
+  function usarSetor(i) {
+    estado.setorAtivo = i;
+    estado.porcoes = estado.setores[i].porcoes;
+    PIZZA.ingredientes.forEach(it => marcar(it, estado.porcoes[it.id] || 0));
+    atualizarPizzaUI();
+  }
+  function selecionarSetor(i) {
+    if (i === estado.setorAtivo || estado.ocupado || estado.forno === "assando") return;
+    usarSetor(i);
+    renderSetoresUI();
+    const sb = saborDoSetor(i);
+    dizer("Editando a " + nomeSetor(i).toLowerCase() + (sb ? ": " + sb.nome : ": escolha o sabor"));
+  }
+  function definirK(n) {
+    if (n === estado.k) return true;
+    if (estado.ocupado || estado.forno === "assando") return false;
+    const tem = estado.setores.some(temIng);
+    if (tem && !window.confirm("Mudar a quantidade de sabores limpa a pizza. Continuar?")) return false;
+    if (tem || estado.forno) montarOutra();
+    estado.k = n;
+    estado.setores = Array.from({ length: n }, () => ({ sabor: null, porcoes: Object.fromEntries(PIZZA.ingredientes.map(i => [i.id, 0])) }));
+    usarSetor(0);
+    renderSetoresUI();
+    soltarPedido("pizza");
+    precificar("pizza");
+    dizer(n > 1 ? "Escolha o sabor da " + nomeSetor(0).toLowerCase() : "Toque num ingrediente para adicionar");
+    return true;
+  }
+  function renderSetoresUI() {
+    const box = $("#saboresQtd"), max = maxSabores();
+    box.replaceChildren();
+    box.hidden = max <= 1;
+    if (max > 1) {
+      const rot = document.createElement("span");
+      rot.className = "qtd-rot"; rot.textContent = "Sabores:";
+      box.appendChild(rot);
+      for (let n = 1; n <= max; n++) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "qtd"; b.textContent = String(n); b.setAttribute("role", "radio");
+        b.setAttribute("aria-checked", String(n === estado.k)); b.setAttribute("aria-label", n + (n > 1 ? " sabores" : " sabor"));
+        b.addEventListener("click", () => definirK(n));
+        box.appendChild(b);
+      }
+      if (estado.k > 1) estado.setores.forEach((st, i) => {
+        const sb = saborDoSetor(i), b = document.createElement("button");
+        b.type = "button";
+        b.className = "setor" + (i === estado.setorAtivo ? " setor--ativo" : "") + (!temIng(st) ? " setor--vazio" : "");
+        b.textContent = FRAC[estado.k] + " " + (sb ? sb.nome : temIng(st) ? "personalizado" : "escolher sabor");
+        b.setAttribute("aria-pressed", String(i === estado.setorAtivo));
+        b.addEventListener("click", () => selecionarSetor(i));
+        box.appendChild(b);
+      });
+    }
+    desenharCortes();
+  }
+  /* tocar numa fatia da pizza também seleciona a fatia */
+  pizzaEl.addEventListener("click", e => {
+    if (estado.k < 2 || estado.forno || estado.ocupado) return;
+    const g = roda(), dx = e.clientX - g.cx, dy = e.clientY - g.cy, d = Math.hypot(dx, dy);
+    if (d > g.R * 0.98 || d < 4) return;
+    const rel = (((Math.atan2(dy, dx) + Math.PI / 2) % TAU) + TAU) % TAU;
+    selecionarSetor(Math.min(estado.k - 1, Math.floor(rel / (TAU / estado.k))));
+  });
+
+  /* Escolher um sabor: esvazia a fatia ativa e joga os ingredientes dele, um a um, com as animações de sempre */
   function aplicarSabor(sb) {
-    if (estado.forno === "assando") return;
-    const meu = ++saborSeq;
-    const reset = PIZZA.ingredientes.some(i => (estado.porcoes[i.id] || 0) > 0) || !!estado.forno;
-    if (reset) montarOutra();
-    if (!sb) { estado.sabor = null; atualizarPizzaUI(); return; }
-    estado.sabor = sb.id;
+    if (estado.forno === "assando" || estado.ocupado) return;
+    const meu = ++saborSeq, i = estado.setorAtivo, st = estado.setores[i];
+    const reset = temIng(st) || !!estado.forno;
+    if (reset) {
+      if (estado.k === 1 || estado.forno) montarOutra(); else limparSetor(i);
+      if (estado.setorAtivo !== i) usarSetor(i);
+    }
+    if (!sb) { st.sabor = null; renderSetoresUI(); atualizarPizzaUI(); return; }
+    st.sabor = sb.id;
+    estado.ocupado = true;
+    renderSetoresUI();
     atualizarPizzaUI();
     let t = reset ? 420 : 60;
     Object.entries(sb.ings).forEach(([id, q]) => {
-      const it = PIZZA.ingredientes.find(i => i.id === id);
-      for (let k = 0; k < q; k++) { setTimeout(() => { if (meu === saborSeq && it) adicionar(it); }, t); t += 520; }
+      const it = PIZZA.ingredientes.find(x => x.id === id);
+      for (let c = 0; c < q; c++) { setTimeout(() => { if (meu === saborSeq && it) adicionar(it); }, t); t += 520; }
     });
     setTimeout(() => {
       if (meu !== saborSeq) return;
+      estado.ocupado = false;
       soltarPedido("pizza");
-      dizer(sb.nome + ": toque nos ingredientes para ajustar");
+      const prox = estado.k > 1 ? estado.setores.findIndex((s2, j) => j !== i && !temIng(s2)) : -1;
+      if (prox >= 0) { usarSetor(prox); renderSetoresUI(); dizer("Agora escolha o sabor da " + nomeSetor(prox).toLowerCase()); }
+      else dizer(sb.nome + ": toque nos ingredientes para ajustar");
     }, t + 200);
   }
   function montarSabores() {
@@ -1268,22 +1498,31 @@
       b.type = "button"; b.className = "sabor"; b.dataset.sabor = id; b.textContent = texto; b.setAttribute("role", "radio");
       b.addEventListener("click", () => {
         const sb = SABORES.find(x => x.id === id) || null;
-        if (!sb && !estado.sabor) return;      /* "Do zero" sem sabor escolhido: não apaga a pizza do cliente */
+        if (!sb && !saborAtual()) return;      /* "Do zero" sem sabor escolhido: não apaga o que o cliente montou */
         aplicarSabor(sb);
       });
       box.appendChild(b);
     };
     pilula("", "Do zero");
     SABORES.forEach(sb => pilula(sb.id, sb.nome));
-    $("#saboresBox").hidden = SABORES.length === 0;
+    box.style.display = SABORES.length ? "" : "none";
     renderSaborInfo();
   }
   montarAbasPizza();
   montarSabores();
+  /* tamanhos que não estão no cardápio somem; o resto começa no tamanho padrão */
+  $$(".tamanhos button").forEach(b => {
+    if (!PIZZA.tamanhos[b.dataset.tam]) b.style.display = "none";
+    b.setAttribute("aria-checked", String(b.dataset.tam === estado.tam));
+  });
+  giroEl.style.transform = `scale(${escalaGiro()})`;
+  renderSetoresUI();
 
   /* ---- Pizza: tamanho ---- */
   $$(".tamanhos button").forEach(b => b.addEventListener("click", () => {
-    if (b.dataset.tam === estado.tam || estado.forno) return;
+    if (b.dataset.tam === estado.tam || estado.forno || estado.ocupado) return;
+    const novoMax = PIZZA.tamanhos[b.dataset.tam].sabores || 1;
+    if (estado.k > novoMax && !definirK(novoMax)) return;   /* cabem menos sabores: limpa a pizza (com confirmação) */
     estado.mexeu = true;
     const antes = total("pizza");
     const cresce = PIZZA.tamanhos[b.dataset.tam].escala > escalaGiro();
@@ -1295,6 +1534,7 @@
     vibrar(6);
     soltarPedido("pizza");
     precificar("pizza", total("pizza") - antes);
+    renderSetoresUI();
   }));
 
   /* ---- Pizza: o forno ---- */
@@ -1308,9 +1548,11 @@
       vibrar(12);
       return entregar("pizza");
     }
-    if (!PIZZA.ingredientes.some(i => estado.porcoes[i.id])) {
+    const fatiaVazia = estado.setores.findIndex(st => !PIZZA.ingredientes.some(i => (st.porcoes[i.id] || 0) > 0));
+    if (fatiaVazia >= 0) {
       UI.pizza.pedir.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], { duration: 300 });
-      dizer("Coloque um ingrediente primeiro");
+      if (estado.k > 1) { selecionarSetor(fatiaVazia); dizer("Escolha o sabor da " + nomeSetor(fatiaVazia).toLowerCase()); }
+      else dizer("Coloque um ingrediente primeiro");
       vibrar([8, 30, 8]);
       return;
     }
@@ -1376,13 +1618,15 @@
     dizer("Feita no fogo.", montarOutra, "Montar outra");
   }
   function montarOutra() {
+    saborSeq++; estado.ocupado = false;
     estado.mexeu = true;
     estado.pecas.forEach((p, i) => {
       p.el.animate([{ transform: "translate(0, 0) scale(1)", opacity: 1 }, { transform: "translate(0, -18px) scale(0)", opacity: 0 }], { duration: 260, delay: 7 * i, easing: "ease-in", fill: "forwards" }).onfinish = () => p.el.remove();
     });
     estado.pecas = [];
     toques = 0;
-    PIZZA.ingredientes.forEach(i => { estado.porcoes[i.id] = 0; marcar(i, 0); });
+    estado.setores.forEach(st => { PIZZA.ingredientes.forEach(i => { st.porcoes[i.id] = 0; }); st.sabor = null; });
+    usarSetor(0);   /* volta à 1ª fatia e limpa os selos dos botões */
     estado.forno = null;
     appEl.classList.remove("assada", "assando");
     [assadaEl, fornoEl, fogoVid, calor, anel, brilho, ...queijo.camadas.flatMap(c => [c.tela, c.telaD]), ...Object.values(molhos).map(m => m.tela)].forEach(e => e.getAnimations().forEach(a => a.cancel()));
@@ -1394,7 +1638,7 @@
     UI.pizza.comanda.hidden = true;
     soltarPedido("pizza");
     precificar("pizza");
-    estado.sabor = null;
+    renderSetoresUI();
     atualizarPizzaUI();
     dizer("Toque num ingrediente para adicionar");
   }
@@ -2935,14 +3179,21 @@
     const somaMapa = (mapa, lista) => Object.entries(mapa || {}).reduce((s, par) => s + par[1] * ((lista.find(i => i.id === par[0]) || {}).preco || 0), 0);
     function itemValido(it) {
       if (!it || typeof it !== "object") return false;
-      if (it.tipo === "pizza") return Object.prototype.hasOwnProperty.call(PIZZA.tamanhos, it.tamanho) && mapaOk(it.ingredientes, PIZZA.ingredientes, MAX_PORCOES);
+      if (it.tipo === "pizza") {
+        if (!Object.prototype.hasOwnProperty.call(PIZZA.tamanhos, it.tamanho)) return false;
+        if (Array.isArray(it.setores)) return it.setores.length >= 2 && it.setores.length <= (PIZZA.tamanhos[it.tamanho].sabores || 1)
+          && it.setores.every(sx => mapaOk(sx && sx.ingredientes, PIZZA.ingredientes, MAX_PORCOES));
+        return mapaOk(it.ingredientes, PIZZA.ingredientes, MAX_PORCOES);
+      }
       if (it.tipo === "lanche") return PAES.some(p => p.id === it.pao) && mapaOk(it.camadas, LANCHE.camadas.filter(c => !c.fixo), 2);
       if (it.tipo === "massa") return MOLHOS_MASSA.some(m => m.id === it.molho) && TIPOS_MASSA.some(t => t.id === it.tipo_massa)
         && mapaOk(it.ingredientes, MASSA.ingredientes, 2) && mapaOk(it.finalizacoes, FINALIZACOES, 2);
       return false;
     }
     function precoItem(it) {
-      if (it.tipo === "pizza") return PIZZA.tamanhos[it.tamanho].preco + somaMapa(it.ingredientes, PIZZA.ingredientes);
+      if (it.tipo === "pizza") return PIZZA.tamanhos[it.tamanho].preco + (Array.isArray(it.setores)
+        ? Math.max(...it.setores.map(sx => somaMapa(sx.ingredientes, PIZZA.ingredientes)))
+        : somaMapa(it.ingredientes, PIZZA.ingredientes));
       if (it.tipo === "lanche") return LANCHE.base + PAES.find(p => p.id === it.pao).preco + somaMapa(it.camadas, LANCHE.camadas);
       return MASSA.base + somaMapa(it.ingredientes, MASSA.ingredientes) + somaMapa(it.finalizacoes, FINALIZACOES);
     }
@@ -3194,6 +3445,10 @@
     function montarItem(app) {
       if (itemRapido) return itemRapido;
       const so = (lista, mapa) => { const o = {}; lista.forEach(i => { const n = mapa(i.id) || 0; if (n > 0) o[i.id] = n; }); return o; };
+      if (app === "pizza" && estado.k > 1) return {
+        tipo: "pizza", tamanho: estado.tam, sabor: rotuloSabor(),
+        setores: estado.setores.map((st, i) => ({ sabor: rotuloSetor(i), ingredientes: so(PIZZA.ingredientes, id => st.porcoes[id]) }))
+      };
       if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]), sabor: rotuloSabor() };
       if (app === "massa") return {
         tipo: "massa", molho: estado.massaMolho, tipo_massa: estado.massaRecipiente,

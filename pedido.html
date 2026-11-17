@@ -76,7 +76,8 @@
               <h2 class="app__titulo">Monte sua pizza</h2>
               <div class="tamanhos" role="radiogroup" aria-label="Tamanho">
                 <button role="radio" data-tam="P" aria-checked="false">P</button><button role="radio" data-tam="M"
-                  aria-checked="false">M</button><button role="radio" data-tam="G" aria-checked="true">G</button>
+                  aria-checked="false">M</button><button role="radio" data-tam="G" aria-checked="true">G</button><button role="radio" data-tam="GG"
+                  aria-checked="false">GG</button>
               </div>
             </div>
             <div class="pizza" id="pizza">
@@ -101,6 +102,7 @@
             </div>
             <p class="app__dica" id="dica-pizza" aria-live="polite">Toque num ingrediente para adicionar</p>
             <div class="sabores-box" id="saboresBox">
+              <div class="sabores-qtd" id="saboresQtd" hidden></div>
               <div class="sabores" id="sabores" role="radiogroup" aria-label="Sabores prontos"></div>
               <div class="sabor-info" id="saborInfo" hidden></div>
             </div>

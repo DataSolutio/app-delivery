@@ -164,7 +164,7 @@
     ["massa.ingrediente", "Massas · Ingredientes"], ["massa.finalizacao", "Massas · Finalizações"]
   ];
   const SEM_PRECO = ["massa.molho", "massa.tipo"];                 /* o servidor não cobra por estes */
-  const COM_MAX = ["lanche.ingrediente", "massa.ingrediente"];     /* o app do cliente respeita o limite só nestes */
+  const COM_MAX = ["lanche.ingrediente", "massa.ingrediente", "pizza.tamanho"];     /* o app do cliente respeita o limite só nestes */
   let itensMenu = [], cardapioCarregado = false, catAtual = "todas", lojaAberta = true;
   const fechados = new Set();          /* produtos recolhidos na barra lateral */
   const resumos = new Map();           /* grupo → função que reescreve o "14 itens · 2 fora do ar" */
@@ -331,7 +331,7 @@
     sec.appendChild(cab);
 
     const cabCols = el("div", "item item--cab", null);
-    ["Item", SEM_PRECO.includes(g[0]) ? "" : "Preço", COM_MAX.includes(g[0]) ? "Máx." : "", "Disponível", ""].forEach(t => cabCols.appendChild(el("span", null, t)));
+    ["Item", SEM_PRECO.includes(g[0]) ? "" : "Preço", COM_MAX.includes(g[0]) ? (g[0] === "pizza.tamanho" ? "Sabores" : "Máx.") : "", "Disponível", ""].forEach(t => cabCols.appendChild(el("span", null, t)));
     cabCols.setAttribute("aria-hidden", "true");
     sec.appendChild(cabCols);
     itens.forEach(i => sec.appendChild(linhaItem(i)));
@@ -356,9 +356,9 @@
     } else li.appendChild(el("span", "item__vazio"));
 
     if (COM_MAX.includes(it.grupo)) {
-      const lm = el("label", "item__campo", "Máx. ");
+      const lm = el("label", "item__campo", it.grupo === "pizza.tamanho" ? "Sabores " : "Máx. ");
       c.mx = el("input"); c.mx.type = "number"; c.mx.min = "1"; c.mx.max = "10"; c.mx.step = "1"; c.mx.inputMode = "numeric";
-      c.mx.value = String(it.max_qtd); c.mx.setAttribute("aria-label", "Quantidade máxima: " + it.nome);
+      c.mx.value = String(it.max_qtd); c.mx.setAttribute("aria-label", (it.grupo === "pizza.tamanho" ? "Quantidade de sabores: " : "Quantidade máxima: ") + it.nome);
       lm.appendChild(c.mx); li.appendChild(lm);
       c.mx.addEventListener("change", function () {
         const v = Number(c.mx.value);

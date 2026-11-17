@@ -3091,3 +3091,29 @@ button {
 @media (min-width: 768px) and (max-height: 800px) {
   .demos--carrossel #slidePizza .vista { overflow-y: auto !important; }
 }
+
+/* ================================================================
+   PIZZA: vários sabores (fatias) e tamanho GG
+   ================================================================ */
+.tamanhos button[data-tam="GG"] { font-size: .72rem; letter-spacing: -.02em; }
+.sabores-qtd { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: thin; }
+.sabores-qtd[hidden] { display: none; }
+.qtd-rot { flex: 0 0 auto; font-size: .7rem; font-weight: 700; color: var(--ink-3); }
+.qtd { flex: 0 0 auto; width: 32px; height: 32px; border: 1.5px solid var(--line-2, var(--line)); border-radius: 50%; background: transparent; color: var(--ink); font: 700 .8rem var(--font-body, inherit); cursor: pointer; }
+.qtd[aria-checked="true"] { background: var(--uva); border-color: var(--uva); color: var(--on-uva, #fff); }
+.setor { flex: 0 0 auto; min-height: 32px; padding: 5px 12px; border: 1px solid var(--uva); border-radius: var(--r-pill); background: transparent; color: var(--uva); font: 700 .7rem var(--font-body, inherit); white-space: nowrap; cursor: pointer; }
+.setor--ativo { background: var(--uva); color: var(--on-uva, #fff); }
+.setor--vazio:not(.setor--ativo) { border-style: dashed; }
+.qtd:focus-visible, .setor:focus-visible { outline: 3px solid var(--uva); outline-offset: 2px; }
+
+/* cortes desenhados sobre a pizza */
+.pizza__cortes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.pizza__cunha { fill: rgba(106, 44, 216, .14); stroke: rgba(106, 44, 216, .6); stroke-width: .014; stroke-dasharray: .05 .035; }
+.pizza__corte { stroke: rgba(255, 255, 255, .9); stroke-width: .02; stroke-linecap: round; }
+.pizza__num-fundo { fill: rgba(38, 26, 20, .6); }
+.pizza__num { fill: #fff; font: 700 .14px system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; }
+
+@media (pointer: coarse) {
+  .qtd { width: 44px; height: 44px; }
+  .setor { min-height: 44px; }
+}
