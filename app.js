@@ -154,6 +154,22 @@
     { id: "bacon", nome: "Bacon", ings: { mucarela: 1, bacon: 1 }, opc: ["azeitona", "tomateseco", "oregano"] },
   ].filter(sb => Object.keys(sb.ings).every(id => PIZZA.ingredientes.some(i => i.id === id)));
   SABORES.forEach(sb => { sb.opc = sb.opc.filter(id => PIZZA.ingredientes.some(i => i.id === id)); });
+
+  /* ---- Borda recheada ----
+     cor/brilho/sombra = como o recheio é desenhado em volta da pizza. O preço vem do banco (grupo pizza.borda).
+     BORDA_MAX = quantos sabores de borda cada tamanho aceita (cada sabor ocupa uma metade da borda).
+     BORDA_GEO = onde o anel é desenhado (r = raio do centro da borda, w = espessura; 1 = beira da imagem). */
+  const BORDAS = [
+    { id: "cheddar", nome: "Cheddar", preco: 8, cor: "#f0a23a", brilho: "#ffd88a", sombra: "rgba(140,70,10,.35)" },
+    { id: "catupiry", nome: "Catupiry", preco: 8, cor: "#f7f3ea", brilho: "#ffffff", sombra: "rgba(80,60,40,.30)" },
+    { id: "chocolate-preto", nome: "Chocolate preto", preco: 10, cor: "#4a2a1c", brilho: "#9a6a50", sombra: "rgba(0,0,0,.40)" },
+    { id: "chocolate-branco", nome: "Chocolate branco", preco: 10, cor: "#f1e2b8", brilho: "#fff8e0", sombra: "rgba(90,70,30,.30)" },
+  ];
+  aplicarLista(BORDAS, "pizza.borda", { preco: true });
+  if (CARD.size && !CARD.has("pizza.borda")) BORDAS.length = 0;   /* banco carregado sem bordas: recurso escondido */
+  const BORDA_MAX = { P: 1, M: 1, G: 2, GG: 2 };
+  const bordaMax = tam => BORDA_MAX[tam] || 1;
+  const BORDA_GEO = { r: 0.915, w: 0.085 };
   { const p = precoDe("lanche.base", "base"); if (p != null) LANCHE.base = p; }
   aplicarLista(LANCHE.camadas, "lanche.ingrediente", { preco: true, max: true });
   aplicarLista(PAES, "lanche.pao", { preco: true });
@@ -172,6 +188,7 @@
      estado.porcoes sempre aponta para as porções da fatia ativa (setorAtivo). */
   estado.k = 1; estado.setorAtivo = 0; estado.ocupado = false;
   estado.setores = [{ sabor: null, porcoes: estado.porcoes }];
+  estado.borda = { n: 1, lados: [null, null], ativa: 0 };   /* borda recheada: n sabores, cada um numa metade */
   if (!PIZZA.tamanhos[estado.tam]) estado.tam = Object.keys(PIZZA.tamanhos).slice(-1)[0];
   const pizzaEl = $("#pizza"), giroEl = $("#pizzaGiro"), cobertura = $("#cobertura");
   const dicas = { pizza: $("#dica-pizza"), lanche: $("#dica-lanche"), massa: $("#dica-massa") };
@@ -186,7 +203,7 @@
   });
   function total(app) {
     /* Vários sabores: cobra-se o tamanho + o sabor mais caro (a mesma regra vale no servidor) */
-    if (app === "pizza") return PIZZA.tamanhos[estado.tam].preco + Math.max(...estado.setores.map(st => PIZZA.ingredientes.reduce((s, i) => s + (st.porcoes[i.id] || 0) * i.preco, 0)));
+    if (app === "pizza") return PIZZA.tamanhos[estado.tam].preco + Math.max(...estado.setores.map(st => PIZZA.ingredientes.reduce((s, i) => s + (st.porcoes[i.id] || 0) * i.preco, 0))) + precoBordaIds(bordaIds());
     if (app === "massa") return MASSA.base + MASSA.ingredientes.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0) + FINALIZACOES.reduce((s, i) => s + (estado.massaPorcoes[i.id] || 0) * i.preco, 0);
     return LANCHE.base + PAES.find(p => p.id === estado.pao).preco + LANCHE.camadas.filter(c => !c.fixo).reduce((s, c) => s + (estado.lanche.get(c.id) || 0) * c.preco, 0);
   }
@@ -226,10 +243,10 @@
   }
   function linhaDoPedido(app) {
     if (app === "pizza") {
-      if (estado.k > 1) return descricaoMulti();
+      if (estado.k > 1) return descricaoMulti() + textoBorda();
       const it = PIZZA.ingredientes.filter(i => estado.porcoes[i.id]).map(i => i.nome.toLowerCase() + (estado.porcoes[i.id] > 1 ? " ×2" : ""));
       const sabor = rotuloSabor();
-      return `Pizza ${estado.tam}${sabor ? " · " + sabor : ""}: ${it.length ? it.join(", ") : "só molho"}`;
+      return `Pizza ${estado.tam}${sabor ? " · " + sabor : ""}: ${it.length ? it.join(", ") : "só molho"}` + textoBorda();
     }
     if (app === "massa") {
       const it = MASSA.ingredientes.filter(i => (estado.massaPorcoes[i.id] || 0) > 0).map(i => i.nome.toLowerCase() + ((estado.massaPorcoes[i.id] || 0) > 1 ? " ×" + (estado.massaPorcoes[i.id] || 0) : ""));
@@ -1273,7 +1290,7 @@
   PIZZA.ingredientes.forEach(item => chip(item, $("#ingPizza"), adicionar, tirar));
 
   /* ---- Pizza: abas de ingredientes, sabores prontos e vários sabores por pizza ---- */
-  const ABAS_PIZZA = [["queijos", "Queijos"], ["carnes", "Carnes"], ["legumes", "Legumes"], ["extras", "Extras"]];
+  const ABAS_PIZZA = [["queijos", "Queijos"], ["carnes", "Carnes"], ["legumes", "Legumes"], ["extras", "Extras"], ["borda", "Borda"]];
   let abaPizza = "queijos", saborSeq = 0;
   const catDe = i => (ABAS_PIZZA.some(a => a[0] === i.cat) ? i.cat : "extras");
   const nomeIng = id => (PIZZA.ingredientes.find(i => i.id === id) || { nome: id }).nome.toLowerCase();
@@ -1290,11 +1307,13 @@
       b.classList.toggle("ing-aba--ativa", on);
       b.setAttribute("aria-selected", String(on));
     });
+    const pn = $("#bordaPanel");
+    if (pn) pn.style.display = abaPizza === "borda" ? "" : "none";
   }
   function montarAbasPizza() {
     const nav = $("#ingAbas");
     nav.replaceChildren();
-    const presentes = ABAS_PIZZA.filter(a => PIZZA.ingredientes.some(i => catDe(i) === a[0]));
+    const presentes = ABAS_PIZZA.filter(a => a[0] === "borda" ? BORDAS.length > 0 : PIZZA.ingredientes.some(i => catDe(i) === a[0]));
     if (!presentes.some(a => a[0] === abaPizza) && presentes.length) abaPizza = presentes[0][0];
     presentes.forEach(a => {
       const b = document.createElement("button");
@@ -1366,11 +1385,13 @@
   }
   function atualizarPizzaUI() {
     $$(".ing-aba").forEach(b => {
-      const n = PIZZA.ingredientes.filter(i => catDe(i) === b.dataset.cat && (estado.porcoes[i.id] || 0) > 0).length;
+      const n = b.dataset.cat === "borda" ? bordaIds().length
+        : PIZZA.ingredientes.filter(i => catDe(i) === b.dataset.cat && (estado.porcoes[i.id] || 0) > 0).length;
       const sp = $(".ing-aba__n", b);
       if (sp) { sp.textContent = n || ""; sp.hidden = !n; }
     });
     renderSaborInfo();
+    renderBordaResumo();
     if (estado.k > 1) renderSetoresUI();
   }
 
@@ -1416,7 +1437,7 @@
     if (estado.ocupado || estado.forno === "assando") return false;
     const tem = estado.setores.some(temIng);
     if (tem && !window.confirm("Mudar a quantidade de sabores limpa a pizza. Continuar?")) return false;
-    if (tem || estado.forno) montarOutra();
+    if (tem || estado.forno) limparPizzaMantendoBorda();
     estado.k = n;
     estado.setores = Array.from({ length: n }, () => ({ sabor: null, porcoes: Object.fromEntries(PIZZA.ingredientes.map(i => [i.id, 0])) }));
     usarSetor(0);
@@ -1468,7 +1489,7 @@
     const meu = ++saborSeq, i = estado.setorAtivo, st = estado.setores[i];
     const reset = temIng(st) || !!estado.forno;
     if (reset) {
-      if (estado.k === 1 || estado.forno) montarOutra(); else limparSetor(i);
+      if (estado.k === 1 || estado.forno) limparPizzaMantendoBorda(); else limparSetor(i);
       if (estado.setorAtivo !== i) usarSetor(i);
     }
     if (!sb) { st.sabor = null; renderSetoresUI(); atualizarPizzaUI(); return; }
@@ -1508,6 +1529,179 @@
     box.style.display = SABORES.length ? "" : "none";
     renderSaborInfo();
   }
+
+  /* ---- Borda recheada: escolha, painel, resumo e anel desenhado em volta da pizza ---- */
+  const nomeBorda = id => (BORDAS.find(b => b.id === id) || { nome: id }).nome;
+  function bordaIds() {
+    const b = estado.borda, ids = b.lados.slice(0, b.n).filter(Boolean);
+    return ids.length === 2 && ids[0] === ids[1] ? [ids[0]] : ids;
+  }
+  function precoBordaIds(ids) {
+    return Array.isArray(ids) && ids.length ? Math.max(...ids.map(id => (BORDAS.find(b => b.id === id) || { preco: 0 }).preco)) : 0;   /* 2 sabores: cobra o mais caro */
+  }
+  function bordaCompleta() {
+    const b = estado.borda, n = b.lados.slice(0, b.n).filter(Boolean).length;
+    return n === 0 || n === b.n;
+  }
+  function textoBorda() {
+    const b = estado.borda, ids = bordaIds();
+    if (!ids.length) return "";
+    if (ids.length === 1) return " + borda de " + nomeBorda(ids[0]).toLowerCase();
+    return " + borda ½ " + nomeBorda(b.lados[0]).toLowerCase() + " + ½ " + nomeBorda(b.lados[1]).toLowerCase();
+  }
+  function limparPizzaMantendoBorda() {
+    estado.manterBorda = true;
+    try { montarOutra(); } finally { estado.manterBorda = false; }
+  }
+  /* trocou para um tamanho que aceita menos sabores de borda: junta tudo num sabor só */
+  function ajustarBordaAoTamanho() {
+    const b = estado.borda;
+    if (b.n > bordaMax(estado.tam)) {
+      b.lados[0] = b.lados[0] || b.lados[1]; b.lados[1] = null; b.n = 1; b.ativa = 0;
+      desenharBorda(false);
+    }
+    renderBordaPanel();
+    atualizarPizzaUI();
+  }
+  function ladoAtivo() { return estado.borda.n > 1 ? estado.borda.ativa : 0; }
+  function escolherBorda(id) {
+    if (estado.forno || estado.ocupado) return;
+    const b = estado.borda, antes = total("pizza"), lado = ladoAtivo();
+    if (id === null) { b.lados = [null, null]; b.ativa = 0; }
+    else if (b.lados[lado] === id) b.lados[lado] = null;           /* tocar de novo tira */
+    else b.lados[lado] = id;
+    if (b.n > 1 && id !== null && b.lados[lado] === id && !b.lados[1 - lado]) b.ativa = 1 - lado;
+    desenharBorda(true, id !== null && b.lados[lado] === id ? lado : -1);
+    renderBordaPanel();
+    atualizarPizzaUI();
+    soltarPedido("pizza");
+    precificar("pizza", total("pizza") - antes);
+    vibrar(8);
+    const ids = bordaIds();
+    if (!ids.length) dizer("Sem borda recheada");
+    else if (!bordaCompleta()) dizer("Agora escolha o sabor da outra metade da borda");
+    else dizer("Borda recheada" + textoBorda().replace(" + borda", "").replace(/^ de /, " de "));
+  }
+  function definirBordaN(n) {
+    const b = estado.borda;
+    if (estado.forno || estado.ocupado || n === b.n) return;
+    const antes = total("pizza");
+    if (n === 1) { b.lados[0] = b.lados[b.ativa] || b.lados[0] || b.lados[1]; b.lados[1] = null; b.ativa = 0; }
+    b.n = n;
+    if (n === 2) b.ativa = b.lados[0] ? 1 : 0;
+    desenharBorda(false);
+    renderBordaPanel();
+    atualizarPizzaUI();
+    precificar("pizza", total("pizza") - antes);
+  }
+  function selecionarLadoBorda(i) {
+    if (estado.forno || estado.ocupado) return;
+    estado.borda.ativa = i;
+    renderBordaPanel();
+  }
+  function renderBordaPanel() {
+    let pn = $("#bordaPanel");
+    if (!pn) { pn = document.createElement("div"); pn.id = "bordaPanel"; pn.className = "borda-panel"; $("#ingPizza").appendChild(pn); }
+    pn.style.display = abaPizza === "borda" ? "" : "none";
+    pn.replaceChildren();
+    if (!BORDAS.length) return;
+    const b = estado.borda, max = bordaMax(estado.tam), mk = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
+    const topo = mk("div", "borda-topo");
+    topo.appendChild(mk("span", "qtd-rot", "Borda recheada" + (max > 1 ? ": sabores" : "")));
+    if (max > 1) {
+      for (let n = 1; n <= max; n++) {
+        const bt = mk("button", "qtd", String(n)); bt.type = "button"; bt.setAttribute("role", "radio");
+        bt.setAttribute("aria-checked", String(n === b.n)); bt.setAttribute("aria-label", n + (n > 1 ? " sabores de borda" : " sabor de borda"));
+        bt.addEventListener("click", () => definirBordaN(n));
+        topo.appendChild(bt);
+      }
+      if (b.n > 1) for (let i = 0; i < b.n; i++) {
+        const id = b.lados[i], bt = mk("button", "setor" + (i === b.ativa ? " setor--ativo" : "") + (!id ? " setor--vazio" : ""), "½ " + (id ? nomeBorda(id) : "escolher")); bt.type = "button";
+        bt.setAttribute("aria-pressed", String(i === b.ativa));
+        bt.addEventListener("click", () => selecionarLadoBorda(i));
+        topo.appendChild(bt);
+      }
+    }
+    pn.appendChild(topo);
+    const grade = mk("div", "borda-ops"), lado = ladoAtivo();
+    const sem = mk("button", "borda-op" + (!b.lados.slice(0, b.n).some(Boolean) ? " on" : "")); sem.type = "button";
+    sem.appendChild(mk("span", "borda-cor borda-cor--sem", "∅"));
+    const st = mk("span", null); st.appendChild(document.createTextNode("Sem borda")); st.appendChild(mk("small", null, "incluso"));
+    sem.appendChild(st); sem.addEventListener("click", () => escolherBorda(null));
+    grade.appendChild(sem);
+    BORDAS.forEach(bd => {
+      const on = b.lados[lado] === bd.id, bt = mk("button", "borda-op" + (on ? " on" : "")); bt.type = "button";
+      bt.setAttribute("aria-pressed", String(on)); bt.setAttribute("aria-label", "Borda de " + bd.nome + ", mais " + reais(bd.preco));
+      const cor = mk("span", "borda-cor"); cor.style.background = bd.cor;
+      bt.appendChild(cor);
+      const tx = mk("span", null); tx.appendChild(document.createTextNode(bd.nome)); tx.appendChild(mk("small", null, "+ " + reais(bd.preco)));
+      bt.appendChild(tx);
+      bt.addEventListener("click", () => escolherBorda(bd.id));
+      grade.appendChild(bt);
+    });
+    pn.appendChild(grade);
+  }
+  /* linha fixa: o cliente sempre vê se a borda entrou e quanto custa, em qualquer aba */
+  function renderBordaResumo() {
+    let r = $("#bordaResumo");
+    if (!r) { r = document.createElement("p"); r.id = "bordaResumo"; r.className = "borda-resumo"; $("#saborInfo").insertAdjacentElement("afterend", r); }
+    const ids = bordaIds();
+    r.replaceChildren();
+    r.hidden = !ids.length;
+    if (!ids.length) return;
+    r.appendChild(document.createTextNode("Borda recheada: "));
+    const b = estado.borda, partes = ids.length === 1 ? [[ids[0], ""]] : [[b.lados[0], "½ "], [b.lados[1], "½ "]];
+    partes.forEach((p, k) => {
+      if (!p[0]) return;
+      if (k) r.appendChild(document.createTextNode(" + "));
+      const bd = BORDAS.find(x => x.id === p[0]);
+      const dot = document.createElement("span"); dot.className = "borda-cor"; dot.style.background = bd ? bd.cor : "#ccc";
+      r.appendChild(dot);
+      r.appendChild(document.createTextNode(" " + p[1] + nomeBorda(p[0])));
+    });
+    r.appendChild(document.createTextNode(" · + " + reais(precoBordaIds(ids))));
+  }
+  /* anel em volta da pizza: uma cor por metade, desenhado como um traço que percorre a borda */
+  function desenharBorda(animar, ladoAnim) {
+    let svg = $("#pizzaBorda");
+    if (!svg) {
+      svg = document.createElementNS(SVGNS, "svg");
+      svg.id = "pizzaBorda"; svg.setAttribute("class", "pizza__borda"); svg.setAttribute("viewBox", "-1 -1 2 2"); svg.setAttribute("aria-hidden", "true");
+      giroEl.appendChild(svg);
+    }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const b = estado.borda, R = BORDA_GEO.r, W = BORDA_GEO.w, novos = [];
+    for (let i = 0; i < b.n; i++) {
+      const bd = BORDAS.find(x => x.id === b.lados[i]);
+      if (!bd) continue;
+      const g = geomSetor(i, b.n);
+      const camada = (r, larg, cor, extra) => {
+        let el;
+        if (b.n === 1) {
+          el = document.createElementNS(SVGNS, "circle");
+          el.setAttribute("cx", 0); el.setAttribute("cy", 0); el.setAttribute("r", r); el.setAttribute("transform", "rotate(-90)");
+        } else {
+          el = document.createElementNS(SVGNS, "path");
+          el.setAttribute("d", `M${Math.cos(g.a0) * r} ${Math.sin(g.a0) * r} A${r} ${r} 0 0 1 ${Math.cos(g.a1) * r} ${Math.sin(g.a1) * r}`);
+        }
+        el.setAttribute("fill", "none"); el.setAttribute("stroke", cor); el.setAttribute("stroke-width", larg);
+        el.setAttribute("pathLength", "1"); el.setAttribute("stroke-dasharray", "1 1");
+        if (extra) Object.keys(extra).forEach(k => el.setAttribute(k, extra[k]));
+        svg.appendChild(el);
+        if (i === ladoAnim) novos.push(el);
+        return el;
+      };
+      camada(R, W * 1.14, bd.sombra, { transform: (b.n === 1 ? "rotate(-90) " : "") + "translate(0.012 0.02)" });
+      camada(R, W, bd.cor);
+      camada(R + W * 0.2, W * 0.22, bd.brilho, { opacity: ".55" });
+      camada(R - W * 0.36, W * 0.12, "rgba(0,0,0,.14)");
+    }
+    if (animar && !calmo) novos.forEach((el, k) => el.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 950, delay: Math.floor(k / 4) * 40, easing: "cubic-bezier(.3,.6,.3,1)", fill: "backwards" }));
+  }
+  function bordaAssada(on) {
+    const svg = $("#pizzaBorda");
+    if (svg) svg.classList.toggle("pizza__borda--assada", !!on);
+  }
   montarAbasPizza();
   montarSabores();
   /* tamanhos que não estão no cardápio somem; o resto começa no tamanho padrão */
@@ -1517,6 +1711,9 @@
   });
   giroEl.style.transform = `scale(${escalaGiro()})`;
   renderSetoresUI();
+  desenharBorda(false);
+  renderBordaPanel();
+  atualizarPizzaUI();
 
   /* ---- Pizza: tamanho ---- */
   $$(".tamanhos button").forEach(b => b.addEventListener("click", () => {
@@ -1527,6 +1724,7 @@
     const antes = total("pizza");
     const cresce = PIZZA.tamanhos[b.dataset.tam].escala > escalaGiro();
     estado.tam = b.dataset.tam;
+    ajustarBordaAoTamanho();
     $$(".tamanhos button").forEach(x => x.setAttribute("aria-checked", x === b ? "true" : "false"));
     const k = escalaGiro();
     giroEl.style.transform = `scale(${k})`;
@@ -1556,7 +1754,15 @@
       vibrar([8, 30, 8]);
       return;
     }
+    if (!bordaCompleta()) {
+      UI.pizza.pedir.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], { duration: 300 });
+      abaPizza = "borda"; mostrarAbaPizza(); renderBordaPanel();
+      dizer("Escolha o sabor da outra metade da borda");
+      vibrar([8, 30, 8]);
+      return;
+    }
     estado.forno = "assando";
+    bordaAssada(true);
     appEl.classList.add("assando");
     UI.pizza.comanda.hidden = true;
     UI.pizza.texto.textContent = "Assando a 480°";
@@ -1638,6 +1844,10 @@
     UI.pizza.comanda.hidden = true;
     soltarPedido("pizza");
     precificar("pizza");
+    if (!estado.manterBorda) estado.borda = { n: 1, lados: [null, null], ativa: 0 };
+    bordaAssada(false);
+    desenharBorda(false);
+    renderBordaPanel();
     renderSetoresUI();
     atualizarPizzaUI();
     dizer("Toque num ingrediente para adicionar");
@@ -3181,6 +3391,7 @@
       if (!it || typeof it !== "object") return false;
       if (it.tipo === "pizza") {
         if (!Object.prototype.hasOwnProperty.call(PIZZA.tamanhos, it.tamanho)) return false;
+        if (it.borda != null && !(Array.isArray(it.borda) && it.borda.length <= bordaMax(it.tamanho) && it.borda.every(id => BORDAS.some(b => b.id === id)))) return false;
         if (Array.isArray(it.setores)) return it.setores.length >= 2 && it.setores.length <= (PIZZA.tamanhos[it.tamanho].sabores || 1)
           && it.setores.every(sx => mapaOk(sx && sx.ingredientes, PIZZA.ingredientes, MAX_PORCOES));
         return mapaOk(it.ingredientes, PIZZA.ingredientes, MAX_PORCOES);
@@ -3193,7 +3404,7 @@
     function precoItem(it) {
       if (it.tipo === "pizza") return PIZZA.tamanhos[it.tamanho].preco + (Array.isArray(it.setores)
         ? Math.max(...it.setores.map(sx => somaMapa(sx.ingredientes, PIZZA.ingredientes)))
-        : somaMapa(it.ingredientes, PIZZA.ingredientes));
+        : somaMapa(it.ingredientes, PIZZA.ingredientes)) + precoBordaIds(it.borda);
       if (it.tipo === "lanche") return LANCHE.base + PAES.find(p => p.id === it.pao).preco + somaMapa(it.camadas, LANCHE.camadas);
       return MASSA.base + somaMapa(it.ingredientes, MASSA.ingredientes) + somaMapa(it.finalizacoes, FINALIZACOES);
     }
@@ -3446,10 +3657,10 @@
       if (itemRapido) return itemRapido;
       const so = (lista, mapa) => { const o = {}; lista.forEach(i => { const n = mapa(i.id) || 0; if (n > 0) o[i.id] = n; }); return o; };
       if (app === "pizza" && estado.k > 1) return {
-        tipo: "pizza", tamanho: estado.tam, sabor: rotuloSabor(),
+        tipo: "pizza", tamanho: estado.tam, sabor: rotuloSabor(), ...(bordaIds().length ? { borda: bordaIds() } : {}),
         setores: estado.setores.map((st, i) => ({ sabor: rotuloSetor(i), ingredientes: so(PIZZA.ingredientes, id => st.porcoes[id]) }))
       };
-      if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]), sabor: rotuloSabor() };
+      if (app === "pizza") return { tipo: "pizza", tamanho: estado.tam, ingredientes: so(PIZZA.ingredientes, id => estado.porcoes[id]), sabor: rotuloSabor(), ...(bordaIds().length ? { borda: bordaIds() } : {}) };
       if (app === "massa") return {
         tipo: "massa", molho: estado.massaMolho, tipo_massa: estado.massaRecipiente,
         ingredientes: so(MASSA.ingredientes, id => estado.massaPorcoes[id]),

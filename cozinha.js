@@ -158,12 +158,12 @@
   /* ---------------------------------------------------------------- loja e cardápio (edição pelo dono)
      Quem pode gravar é o banco (RLS + permissões de coluna): sem permissão, a atualização volta vazia. */
   const ROTULOS = [
-    ["pizza.tamanho", "Pizza · Tamanhos"], ["pizza.ingrediente", "Pizza · Ingredientes"],
+    ["pizza.tamanho", "Pizza · Tamanhos"], ["pizza.ingrediente", "Pizza · Ingredientes"], ["pizza.borda", "Pizza · Borda"],
     ["lanche.base", "Hambúrguer · Base"], ["lanche.pao", "Hambúrguer · Pães"], ["lanche.ingrediente", "Hambúrguer · Ingredientes"],
     ["massa.base", "Massas · Base"], ["massa.molho", "Massas · Molhos"], ["massa.tipo", "Massas · Tipos de massa"],
     ["massa.ingrediente", "Massas · Ingredientes"], ["massa.finalizacao", "Massas · Finalizações"]
   ];
-  const SEM_PRECO = ["massa.molho", "massa.tipo"];                 /* o servidor não cobra por estes */
+  const SEM_PRECO = ["massa.molho", "massa.tipo"];   /* pizza.borda tem preço: editável na aba Cardápio */                 /* o servidor não cobra por estes */
   const COM_MAX = ["lanche.ingrediente", "massa.ingrediente", "pizza.tamanho"];     /* o app do cliente respeita o limite só nestes */
   let itensMenu = [], cardapioCarregado = false, catAtual = "todas", lojaAberta = true;
   const fechados = new Set();          /* produtos recolhidos na barra lateral */
